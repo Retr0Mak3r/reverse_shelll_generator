@@ -76,9 +76,6 @@ def dup2x3():
         PAYLOAD += clean('rsi')
 
 
-#def shell():
-    #global PAYLOAD
-
 def _exit():
     global PAYLOAD
     PAYLOAD+=clean("rax")
