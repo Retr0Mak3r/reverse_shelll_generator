@@ -7,13 +7,12 @@ from sys import argv
 
 #Fonction qui va vérifier que la string reçue ne contient aucune valeur hexa 0x00 ou 0xFF
 def verifOffus(binBashHexa):
-    #Parcours la string
-    for i in range(0,18,2):
+    #Vérifie s'il y a 0x au debut de la string
+    if binBashHexa[0]+binBashHexa[1] != "0x" :
+        binBashHexa = "0x"+binBashHexa
 
-        #Ignore '0x'
-        if i == 0 :
-                continue
-        
+    #Parcours la string
+    for i in range(2,len(binBashHexa),2):
         #Récupère par tranche de deux caractères une sub string
         sub ="0x"+binBashHexa[i] + binBashHexa[i+1]
         numInHex = int(sub,16)
@@ -29,6 +28,10 @@ def factorOffus(string4Payload):
     if verifOffus(string4Payload) == False:
         return string4Payload
 
+    #Vérifie s'il n'y a pas "0x" au debut de la string
+    if string4Payload[0]+string4Payload[1] != "0x" :
+        string4Payload = "0x"+string4Payload
+    
     #Tableau qui va recevoir les possibilités d'offuscation par addition ou soustraction
     arr = []
     #On définit l'opérateur (1 == '-' ; 2 == '+')
@@ -36,7 +39,7 @@ def factorOffus(string4Payload):
    
     #On parcours la string par tranche de deux caractère pour évaluer les 15 possibilités de soustraction ou d'addition à chaque valeur
     #récupéré
-    for i in range(2,18,2): #Commence à 2 pour ignorer "0x" dans la chaine
+    for i in range(2,len(string4Payload),2): #Commence à 2 pour ignorer "0x" dans la chaine
 
         #Récupère la substring (valeur en hexa) par tranche de 2
         sub ="0x"+string4Payload[i] + string4Payload[i+1]
@@ -76,8 +79,12 @@ def offus(string4Payload, rand):
     #On recinstitue une nouvelle chaine en hexa
     newString = "0x"
 
-    #En ignorant "0x"
-    for i in range(2,18,2):
+    #Vérifie s'il n'y a pas "0x" au debut de la string
+    if string4Payload[0]+string4Payload[1] != "0x" :
+        string4Payload = "0x"+string4Payload
+
+    #On boucle sur l'addition/soustraction avec notre coefficient pour obtenir notre nouvelle string
+    for i in range(2,len(string4Payload),2):
         
         #Récupère la valeur hexa pour l'occurence en cours
         sub = string4Payload[i] + string4Payload[i+1]
