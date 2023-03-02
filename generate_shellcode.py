@@ -28,74 +28,85 @@ def factorOffus(string4Payload):
     if verifOffus(string4Payload) == False:
         return string4Payload
 
-    #Vérifie s'il n'y a pas "0x" au debut de la string
+    #Vérifie s'il n'y a pas "0x" au debut de la string, au quel cas on va l'ajouter
     if string4Payload[0]+string4Payload[1] != "0x" :
         string4Payload = "0x"+string4Payload
     
     #Tableau qui va recevoir les possibilités d'offuscation par addition ou soustraction
-    arr = []
+    arr = []                #tab temporaire
+    theOneArr = []          #tab d'accueil réel
+
     #On définit l'opérateur (1 == '-' ; 2 == '+')
     ope = r(1,2)
    
-    #On parcours la string par tranche de deux caractère pour évaluer les 15 possibilités de soustraction ou d'addition à chaque valeur
-    #récupéré
-    for i in range(2,len(string4Payload),2): #Commence à 2 pour ignorer "0x" dans la chaine
-
-        #Récupère la substring (valeur en hexa) par tranche de 2
-        sub ="0x"+string4Payload[i] + string4Payload[i+1]
-        numInHex = int(sub,16)
-
-        #On vérifie l'addition ou la soustraction à la valeur récupéré de 1 à 15
-        for j in range(1,15):
+    #Evalue les 15 possibilités de soustraction/addition par tranche de 2 octets de la string
+    for j in range(1,15):
             
-            #Soustraciton
+        for i in range(2,len(string4Payload),2): #Commence à 2 pour ignorer "0x" dans la chaine
+
+            #On substring par tranche de 2 octet notre string en hexa
+            sub ="0x"+string4Payload[i+1]
+            numInHex = int(sub,16)
+            
+            #Soustraction : l'offuscation se fera donc par soustraction (et la désof par addition)
             if ope == 1 :
                 tmp = numInHex - j
+
                 #Si le résultat de la sosutraction est différente de 255 (0xFF) ou 0 (0x00), on ajoute à la liste
-                if tmp < 255 and tmp > 0:
-                    arr.append(j)
-                else:
-                    break
-            #Addition
-            if ope == 2 :
-                tmp = numInHex + j
-                #Si le résultat de l'addition est différente de 255 (0xFF) ou 0 (0x00), on ajoute à la liste
-                if tmp < 255 and tmp > 0:
+                if tmp > 0:
                     arr.append(j)
                 else:
                     break
 
-    arr[:] = list(set(arr)) #Rend unique chaque valeurs et les ordonnes 
-    rand = r(arr[0],arr[-1]) #On choisie aléatoirement parmis les valeurs obtenue une seule valeur
+            #Addition : l'offuscation se fera donc par addition (et la désof par soustraction)
+            if ope == 2 :
+                tmp = numInHex + j
+
+                #Si le résultat de l'addition est différente de 255 (0xFF) ou 0 (0x00), on ajoute à la liste
+                if tmp < 255 :
+                    arr.append(j)
+             
+                else:
+                    break
+
+    #Rend unique chaque valeurs et les ordonne
+    arr[:] = list(set(arr)) 
+
+    #On épure du tableau toutes les valeurs que celle de la string ne peuvent pas supporter en ce servant de arr comme 
+    # tableau temporaire
+    for i in range(2,len(string4Payload),2):
+        sub ="0x"+string4Payload[i]+string4Payload[i+1]
+        numInDec = int(sub,16)
+        
+        for j in range(len(arr)) :
+            if ope == 1 :
+                if (numInDec - arr[j]) > 0 :
+                    theOneArr.append(arr[j])
+
+                else:
+                    if arr[j] :
+                        while arr[j] in theOneArr:
+                            del theOneArr[theOneArr.index(arr[j] )]
+            
+            if ope == 2 :
+                if (numInDec + arr[j]) < 255 :
+                    theOneArr.append(arr[j])
+
+                else:
+                    if arr[j] :
+                        while arr[j] in theOneArr:
+                            del theOneArr[theOneArr.index(arr[j] )]
+
+    #Ce tableau setted sera notre tableau de référence pour add ou sub une valeur à chaque double octet de notre string(elle, en hexa)
+    theOneArr[:]= list(set(theOneArr))
+
+    rand = r(theOneArr[0],theOneArr[-1]) #On choisie aléatoirement parmis les valeurs obtenue une seule valeur
 
     #Si l'opérateur été "-", on rend positif la valeur choisie aléatoirement
     if ope == 1 :
          rand = rand * -1
 
     return rand
-
-#Le "main" de l'offuscation, on va utiliser la valeur alétaoire et l'additionner à toutes les valeur par tanches de deux de la string en hexa
-def offus(string4Payload, rand):
-    #On recinstitue une nouvelle chaine en hexa
-    newString = "0x"
-
-    #Vérifie s'il n'y a pas "0x" au debut de la string
-    if string4Payload[0]+string4Payload[1] != "0x" :
-        string4Payload = "0x"+string4Payload
-
-    #On boucle sur l'addition/soustraction avec notre coefficient pour obtenir notre nouvelle string
-    for i in range(2,len(string4Payload),2):
-        
-        #Récupère la valeur hexa pour l'occurence en cours
-        sub = string4Payload[i] + string4Payload[i+1]
-        #Ajout la valeur random à la valeur (résultat en décimal)
-        numInDec = int(sub,16) + rand
-        #Convertit en hexa
-        numInHex = hex(numInDec)
-        #numInHex = "0xXX" donc on récupère que la valeur XX
-        newString = newString + str(numInHex[-2:])
-    
-    return newString
 
 #Renvoit l'opcode pour soustraire ou additionnner ce qui rend la désoffuscation possible
 def deOffus(factorOffusVar, string_to_deof):
@@ -104,9 +115,13 @@ def deOffus(factorOffusVar, string_to_deof):
     if factorOffusVar < 0 :
         factorOffusVar *= -1 
         if factorOffusVar < 10 :
-            for i in range(2, len(string_to_deof)):
-                addString+="0"+str(factorOffusVar)
-            return "4883eb"+addString
+
+            halfLen = int((len(string_to_deof)/2))      #On va créer une string avec un seul caractère comme suit. Ex: 0a0a0a0a0a0a0a
+            for i in range(halfLen):
+                addString+="0"+str(factorOffusVar)      #Le zéro est ajouté ici donc on aura besoin que de la moitié de la longueur de la string (halfLen)
+
+            addString = "4883eb" + addString
+            return addString
         
         elif factorOffusVar >= 10 :
             newFactor = ""
@@ -117,21 +132,25 @@ def deOffus(factorOffusVar, string_to_deof):
             elif factorOffusVar == 14 : newFactor = "e"
             elif factorOffusVar == 15 : newFactor = "f"
 
-            for i in range(2, len(string_to_deof)):
+            halfLen = int((len(string_to_deof)/2))
+            for i in range(halfLen):
                 addString+="0"+str(newFactor)
 
-            return "4883eb"+addString
+            addString = "4883eb" + addString
+            return addString
         
     #On a sub donc on va re add la différence soustraite
     elif factorOffusVar > 0 :
-        if factorOffusVar <= -10 :
-
-            for i in range(1, len(string_to_deof)):
+        if factorOffusVar <= 10 :
+            
+            halfLen = int((len(string_to_deof)/2))
+            for i in range(halfLen):
                 addString+="0"+str(factorOffusVar)
 
-            return "4883c3"+addString
+            addString = "4883c3" + addString
+            return addString
         
-        elif factorOffusVar > -10 :
+        elif factorOffusVar > 10 :
             newFactor = ""
             if factorOffusVar == 10 : newFactor = "a"
             elif factorOffusVar == 11 : newFactor = "b"
@@ -140,10 +159,13 @@ def deOffus(factorOffusVar, string_to_deof):
             elif factorOffusVar == 14 : newFactor = "e"
             elif factorOffusVar == 15 : newFactor = "f"
 
-            for i in range(1, len(string_to_deof)):
+            halfLen = int((len(string_to_deof)/2))
+            for i in range(halfLen):
                 addString+="0"+str(newFactor)
+                #halfLen-=1
 
-            return "4883c3"+addString 
+            addString = "4883c3" + addString
+            return addString
 
 
 def clean(reg):
