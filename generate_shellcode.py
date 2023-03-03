@@ -4,7 +4,6 @@ from random import randint as r
 import socket
 from sys import argv
 
-
 #Fonction qui va vérifier que la string reçue ne contient aucune valeur hexa 0x00 ou 0xFF
 def verifOffus(binBashHexa):
     #Vérifie s'il y a 0x au debut de la string
@@ -140,7 +139,6 @@ def offus(string4Payload, rand):
     
     return newString
 
-
 #Renvoit l'opcode pour soustraire ou additionnner ce qui rend la désoffuscation possible
 def deOffus(factorOffusVar, string_to_deof):
     addString = ""
@@ -199,6 +197,7 @@ def deOffus(factorOffusVar, string_to_deof):
 
             addString = "4883c3" + addString
             return addString
+
 
 
 def clean(reg):

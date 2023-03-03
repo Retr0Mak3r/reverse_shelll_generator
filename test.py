@@ -197,10 +197,10 @@ def deOffus(factorOffusVar, string_to_deof):
             addString = "4883c3" + addString
             return addString
          
-random1 = factorOffus("0x68732f6e69622f2f")
-of_string = offus("0x68732f6e69622f2f", random1)
+random1 = factorOffus("b02a")
+of_string = offus("b02a", random1)
 of_string = of_string[::-1] #litle indian
 of_string += "48bb"
 deof_string = deOffus(random1, of_string)
         
-print("FINAL : 0x68732f6e69622f2f", random1, of_string, deof_string)
+print("FINAL : b02a", random1, of_string, deof_string)
