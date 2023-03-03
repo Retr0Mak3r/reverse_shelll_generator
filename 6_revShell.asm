@@ -60,6 +60,7 @@ push word 7459              ; hexadécimal pour le port 8989
 push word 2                 ; AF_INET
 mov rsi, rsp
 mov dl, 24
+push rax
 syscall
 
 xor rax, rax

